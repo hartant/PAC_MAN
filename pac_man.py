@@ -1,6 +1,7 @@
 from mazegenerator import MazeGenerator
-from src.core import GameEngine
+from src.logic.core import GameEngine
 import pygame as pg
+from src.ui.menu import MenuScreen
 
 
 if __name__ == "__main__":
@@ -11,11 +12,10 @@ if __name__ == "__main__":
     win_heigh = 800
 
     mazeg = MazeGenerator(size=(maze_width, maze_height))
-    print(mazeg.maze)
-    engine = GameEngine(
-                    win_with,
-                    win_heigh,
-                    mazeg.maze
-                )
-    engine.run()
+    pg.init()
+    screen = pg.display.set_mode((800, 800))
+    scores = [("Ann", 100), ("Bob", 50)]   # fake list until highscore.py exists
+    choice = MenuScreen(screen, scores).run()
+    if choice == "playing":
+        engine.run()
     pg.quit()

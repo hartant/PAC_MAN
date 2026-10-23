@@ -1,6 +1,6 @@
 import pygame as pg
-from src.graphics import Renderer
-from src.father import Player
+from src.ui.graphics import Renderer
+from src.logic.father import Player
 from typing import List
 
 
