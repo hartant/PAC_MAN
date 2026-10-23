@@ -1,0 +1,17 @@
+[project]
+name = "pac-man"
+version = "0.1.0"
+description = "Welcome to pac-man"
+requires-python = ">=3.10"
+
+dependencies = [
+    "pygame>=2.6.1",
+    "pygame-ce>=2.5.8",
+]
+
+[dependency-groups]
+dev = [
+    "pytest>=7.0",
+    "flake8>=7.0",
+    "mypy>=1.0",
+]
