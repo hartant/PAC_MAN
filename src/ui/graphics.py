@@ -2,7 +2,7 @@ import pygame as pg
 from typing import List, Tuple
 
 
-class Renderer():     # (.... w_with,w_height)
+class Renderer():
     def __init__(
             self,
             matrix: List[List[int]],
@@ -16,10 +16,18 @@ class Renderer():     # (.... w_with,w_height)
         self.offset_x: int = offset_x
         self.offset_y: int = offset_y
         self.cell_size: int = cell_size
-
         self.wall_thickness: int = 2
 
-    def draw_maze(self):
+    def set_layout(self, screen: pg.Surface, offset_x: int,
+                   offset_y: int, cell_size: int) -> None:
+        """Called when the window size changes."""
+        self.screen = screen
+        self.offset_x = offset_x
+        self.offset_y = offset_y
+        self.cell_size = cell_size
+        self.wall_thickness = max(2, cell_size // 12)
+
+    def draw_maze(self) -> None:
         colored_cells = self.get_42_cells()
         rows = len(self.matrix)
         cols = len(self.matrix[0])
@@ -74,31 +82,16 @@ class Renderer():     # (.... w_with,w_height)
                         )
 
     def get_42_cells(self) -> set:
-        pattern = [
-            "100 111",
-            "100 001",
-            "111 111",
-            "001 100",
-            "001 111",
-        ]
-        rows = len(self.matrix)
-        cols = len(self.matrix[0])
-
-        start_row = (rows - len(pattern)) // 2
-        start_col = (cols - len(pattern[0])) // 2
-
+        """The '42' cells are the ones closed on all 4 sides (value 15)."""
         colored_cells: set = set()
-
-        for r, line in enumerate(pattern):
-            for c, value in enumerate(line):
-                if value == "1":
-                    colored_cells.add(
-                        (start_row + r, start_col + c)
-                        )
+        for row, line in enumerate(self.matrix):
+            for col, cell in enumerate(line):
+                if cell == 15:
+                    colored_cells.add((row, col))
         return colored_cells
 
-    def draw_player(self, position: Tuple[int]):
-        x = position[0] + self.offset_x + self.cell_size // 2
-        y = position[1] + self.offset_y + self.cell_size // 2
-        print(x, y)
+    def draw_player(self, position: Tuple[int, int]) -> None:
+        """position = (column, row) of the player in the maze (cells)."""
+        x = self.offset_x + position[0] * self.cell_size + self.cell_size // 2
+        y = self.offset_y + position[1] * self.cell_size + self.cell_size // 2
         pg.draw.circle(self.screen, "yellow", (x, y), self.cell_size // 3)

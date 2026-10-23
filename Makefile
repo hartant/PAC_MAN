@@ -1,5 +1,5 @@
 PYTHON = python3
-MAIN = pac_man
+MAIN = pac-man
 
 .PHONY: install run debug clean lint lint-strict
 
@@ -7,7 +7,7 @@ install:
 	uv sync
 
 run:
-	uv run python -m $(MAIN)
+	uv run python -m $(MAIN) config.json
 
 debug:
 	$(PYTHON) -m pdb $(MAIN)
