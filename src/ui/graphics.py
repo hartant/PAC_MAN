@@ -101,4 +101,4 @@ class Renderer():     # (.... w_with,w_height)
         x = position[0] + self.offset_x + self.cell_size // 2
         y = position[1] + self.offset_y + self.cell_size // 2
         print(x, y)
-        pg.draw.aacircle(self.screen, "yellow", (x, y), self.cell_size // 3)
+        pg.draw.circle(self.screen, "yellow", (x, y), self.cell_size // 3)
