@@ -52,7 +52,6 @@ class GameEngine():
 
         self.player = Player((0, 0), 0, 0, "Ahmed")
 
-       
         self.state = make_fake_state(self.matrix)
         self.hud = Hud()
 
@@ -103,17 +102,26 @@ class GameEngine():
 
     def run(self) -> str:
         # holding a key repeats the move: after 250 ms, then every 120 ms
+        move_timer = 0.0
+        move_interval = 0.12
+
         pg.key.set_repeat(250, 120)
         while self.runing:
+            dt = self.clock.tick(60) / 1000.0
+
             self.refresh_layout()
             self.handle_event()
             self.check_end
             self.check_end()
-            
+
+            move_timer += dt
+
+            while move_timer >= move_interval:
+                self.player.move(self.maze)
+                move_timer -= move_interval
 
             self.draw()
             pg.display.flip()
-            self.clock.tick(60)
         pg.key.set_repeat()      # turn the repeat off
         return self.result
 
@@ -151,7 +159,8 @@ class GameEngine():
                 direction = KEY_TO_DIRECTION.get(event.key)
                 if direction is not None:
                     # ONE key press = ONE cell
-                    self.player.move(self.maze, direction)
+                    self.player.set_direction(direction)
+                    # self.player.move(self.maze, direction)
 
     def handle_pause_key(self, key: int) -> None:
         """Keys while the game is paused."""
@@ -167,7 +176,7 @@ class GameEngine():
 
     def update(self):
         pass
-    
+
     def check_end(self) -> None:
         """If the game is over (win or lose), ask the player's name."""
         if self.state.status not in ("game_over", "victory"):

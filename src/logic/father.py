@@ -36,24 +36,32 @@ class Player():
         self.speed: int = 5
         self.score: int = 0
         self.direction: int
-        self.ui_x: int = pos_x
-        self.ui_y: int = pos_y
+        self.next_direction: int = 0
 
-    def move(self, maze: Maze, direction: int) -> None:
-        if not maze.can_move(self.pos_y, self.pos_x, direction):
+    def move(self, maze: Maze) -> None:
+        if not maze.can_move(self.pos_y, self.pos_x, self.next_direction):
             return
 
-        if direction == Maze.TOP:
+        if self.next_direction == Maze.TOP:
             self.pos_y -= 1
 
-        elif direction == Maze.BUTTOM:
+        elif self.next_direction == Maze.BUTTOM:
             self.pos_y += 1
 
-        elif direction == Maze.LEFT:
+        elif self.next_direction == Maze.LEFT:
             self.pos_x -= 1
 
-        elif direction == Maze.RIGHT:
+        elif self.next_direction == Maze.RIGHT:
             self.pos_x += 1
+
+    def set_direction(self, direction: int) -> None:
+        if direction in (
+            Maze.TOP,
+            Maze.BUTTOM,
+            Maze.LEFT,
+            Maze.RIGHT
+        ):
+            self.next_direction = direction
 
     def return_enter(self):
         """default position"""
