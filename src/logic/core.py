@@ -3,6 +3,9 @@ from src.ui.graphics import Renderer
 from src.logic.father import Player
 from src.logic.maze import Maze
 from src.ui.hud import Hud
+from src.ui.pause import PauseMenu
+from src.ui.end_screen import EndScreen
+from src.ui.menu import KEY_NAMES
 from src.ui.fake_state import make_fake_state
 from typing import List
 
@@ -50,8 +53,12 @@ class GameEngine():
         self.player = Player((0, 0), 0, 0, "Ahmed")
 
        
-        self.state = make_fake_state()
+        self.state = make_fake_state(self.matrix)
         self.hud = Hud()
+
+        self.paused: bool = False
+        self.player_name: str = ""
+        self.pause_menu = PauseMenu()
 
     def refresh_layout(self) -> None:
         """If the window size changed, recompute the maze layout."""
@@ -100,6 +107,9 @@ class GameEngine():
         while self.runing:
             self.refresh_layout()
             self.handle_event()
+            self.check_end
+            self.check_end()
+            
 
             self.draw()
             pg.display.flip()
@@ -110,8 +120,13 @@ class GameEngine():
     def draw(self):
         self.screen.fill("black")
         self.graphic.draw_maze()
+        self.graphic.draw_pacgums(self.state.pacgums)
+        self.graphic.draw_super_pacgums(self.state.super_pacgums)
+        self.graphic.draw_ghosts(self.state.ghosts)               # new
         self.player_control()
         self.hud.draw(self.screen, self.state)
+        if self.paused:
+            self.pause_menu.draw(self.screen)
 
     def handle_event(self):
         for event in pg.event.get():
@@ -120,16 +135,53 @@ class GameEngine():
             elif event.type == pg.KEYDOWN:
                 if event.key == pg.K_q:
                     self.runing = False
+                if self.paused:
+                    self.handle_pause_key(event.key)
+                    continue
+                if event.key in (pg.K_p, pg.K_ESCAPE):
+                    self.paused = True
+                    self.pause_menu.selected = 0
                 if event.key == pg.K_r:
                     self.result = "menu"      # go back to the menu
                     self.runing = False
+                if event.key == pg.K_g:
+                    self.state.status = "game_over"
+                if event.key == pg.K_v:
+                    self.state.status = "victory"
                 direction = KEY_TO_DIRECTION.get(event.key)
                 if direction is not None:
                     # ONE key press = ONE cell
                     self.player.move(self.maze, direction)
 
+    def handle_pause_key(self, key: int) -> None:
+        """Keys while the game is paused."""
+        if key == pg.K_p:
+            action = "resume"
+        else:
+            action = self.pause_menu.handle_key(KEY_NAMES.get(key, ""))
+        if action == "resume":
+            self.paused = False
+        elif action == "menu":
+            self.result = "menu"
+            self.runing = False
+
     def update(self):
         pass
+    
+    def check_end(self) -> None:
+        """If the game is over (win or lose), ask the player's name."""
+        if self.state.status not in ("game_over", "victory"):
+            return
+        end_screen = EndScreen(self.state.status, self.state.score)
+        name = end_screen.run()
+        if name is None:                  # window closed
+            self.result = "quit"
+        else:
+            self.player_name = name
+            # friend: save the score here, example:
+            # save_highscore(name, self.state.score)
+            self.result = "menu"
+        self.runing = False
 
     def player_control(self):
         """Only draws the player (the move is done in handle_event)."""

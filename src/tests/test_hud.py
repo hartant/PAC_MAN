@@ -4,8 +4,12 @@ os.environ.setdefault("SDL_VIDEODRIVER", "dummy")
 
 import pygame as pg  # noqa: E402
 
+from mazegenerator import MazeGenerator  # noqa: E402
 from src.ui.fake_state import make_fake_state  # noqa: E402
 from src.ui.hud import Hud  # noqa: E402
+
+
+MAZE = MazeGenerator(size=(15, 15), perfect=False, seed=42).maze
 
 
 def test_hud_draws_in_any_window_size() -> None:
@@ -13,13 +17,13 @@ def test_hud_draws_in_any_window_size() -> None:
     hud = Hud()
     for size in [(1200, 900), (500, 400), (1600, 700)]:
         screen = pg.display.set_mode(size)
-        hud.draw(screen, make_fake_state())
+        hud.draw(screen, make_fake_state(MAZE))
 
 
 def test_hud_with_low_time_and_zero_lives() -> None:
     pg.init()
     screen = pg.display.set_mode((800, 600))
-    state = make_fake_state()
+    state = make_fake_state(MAZE)
     state.time_left = 5
     state.lives = 0
     Hud().draw(screen, state)

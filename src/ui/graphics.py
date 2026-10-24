@@ -1,6 +1,10 @@
 import pygame as pg
 from typing import List, Tuple
 
+# red, pink, cyan, orange (like the original game)
+GHOST_COLORS = [(255, 0, 0), (255, 184, 255), (0, 255, 255), (255, 184, 82)]
+EDIBLE_COLOR = (40, 40, 255)
+
 
 class Renderer():
     def __init__(
@@ -95,3 +99,39 @@ class Renderer():
         x = self.offset_x + pos_x * self.cell_size + self.cell_size // 2
         y = self.offset_y + pos_y * self.cell_size + self.cell_size // 2
         pg.draw.circle(self.screen, "yellow", (x, y), self.cell_size // 3)
+    
+    def cell_center(self, col: int, row: int) -> tuple[int, int]:
+        """Pixel position of the center of a cell."""
+        x = self.offset_x + col * self.cell_size + self.cell_size // 2
+        y = self.offset_y + row * self.cell_size + self.cell_size // 2
+        return x, y
+
+    def draw_pacgums(self, positions: set[tuple[int, int]]) -> None:
+        """Small dots. positions = set of (column, row) cells."""
+        radius = max(2, self.cell_size // 10)
+        for col, row in positions:
+            pg.draw.circle(self.screen, (255, 220, 170),
+                           self.cell_center(col, row), radius)
+
+    def draw_super_pacgums(self, positions: set[tuple[int, int]]) -> None:
+        """Big dots. positions = set of (column, row) cells."""
+        radius = max(4, self.cell_size // 4)
+        for col, row in positions:
+            pg.draw.circle(self.screen, "white",
+                           self.cell_center(col, row), radius)
+    
+    def draw_ghosts(self, ghosts: list[tuple[int, int, bool]]) -> None:
+        """ghosts = list of (column, row, edible)."""
+        r = self.cell_size // 3
+        for i, (col, row, edible) in enumerate(ghosts):
+            x, y = self.cell_center(col, row)
+            color = EDIBLE_COLOR if edible else GHOST_COLORS[i % 4]
+            pg.draw.circle(self.screen, color, (x, y), r)           # head
+            pg.draw.rect(self.screen, color, (x - r, y, 2 * r, r))  # body
+            for dx in (-r // 2, r // 2):                            # eyes
+                pg.draw.circle(self.screen, "white",
+                               (x + dx, y - r // 4), max(2, r // 3))
+                pg.draw.circle(self.screen, "black",
+                               (x + dx, y - r // 4), max(1, r // 6))
+
+                               

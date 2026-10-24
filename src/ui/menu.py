@@ -24,7 +24,8 @@ KEY_NAMES: dict[int, str] = {
 INSTRUCTIONS: list[str] = [
     "Controls",
     "Arrow keys or WASD : move",
-    "P : pause / resume",
+    "P or ESC : pause / resume",
+    "R : back to the main menu",
     "Q : quit",
     "",
     "Rules",

@@ -14,13 +14,25 @@ class FakeState:
     status: str = "playing"
 
 
-def make_fake_state() -> FakeState:
+def make_fake_state(maze: list[list[int]]) -> FakeState:
+    """Fake numbers. The maze is used to put dots in the corridors."""
+    rows = len(maze)
+    cols = len(maze[0])
+    corners = {(0, 0), (cols - 1, 0), (0, rows - 1), (cols - 1, rows - 1)}
+
+    pacgums = set()
+    for row in range(rows):
+        for col in range(cols):
+            closed = maze[row][col] == 15       # the "42" cells
+            if not closed and (col, row) not in corners:
+                pacgums.add((col, row))
+
     return FakeState(
-        player_pos=(2, 2),
-        ghosts=[(0, 0, False), (14, 0, False),
-                (0, 14, True), (14, 14, False)],
-        pacgums={(1, 1), (2, 1), (3, 1), (4, 1)},
-        super_pacgums={(0, 0), (14, 0), (0, 14), (14, 14)},
+        player_pos=(0, 0),
+        ghosts=[(0, 0, False), (cols - 1, 0, False),
+                (0, rows - 1, True), (cols - 1, rows - 1, False)],
+        pacgums=pacgums,
+        super_pacgums=corners,
         score=1250,
         lives=3,
         level=1,
