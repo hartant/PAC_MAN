@@ -1,6 +1,7 @@
 import pygame as pg
 from src.ui.graphics import Renderer
 from src.logic.father import Player
+from src.logic.maze import Maze
 from typing import List
 
 
@@ -24,6 +25,8 @@ class GameEngine():
         self.runing: bool = True
         self.clock = pg.time.Clock()
 
+        self.maze = Maze(self.matrix)
+
         self.graphic = Renderer(self.matrix,
                                 self.screen,
                                 self.offset_x,
@@ -33,7 +36,7 @@ class GameEngine():
         self.graphic.set_layout(self.screen, self.offset_x,
                                 self.offset_y, self.cell_size)
 
-        self.player = Player((2, 2), "Ahmed")
+        self.player = Player((0, 0), 0, 0, "Ahmed")
 
     def refresh_layout(self) -> None:
         """If the window size changed, recompute the maze layout."""
@@ -53,7 +56,7 @@ class GameEngine():
         cols: int = len(self.matrix[0])
 
         # Mssaha dyal l-HUD f l-t7t wla l-foq
-        space: int = 60 
+        space: int = 60
 
         u_width = self.window_width - (margin * 2)
         u_height = (self.window_height - space) - (margin * 2)
@@ -95,13 +98,21 @@ class GameEngine():
             if event.type == pg.QUIT:
                 self.runing = False
 
-        keys = pg.key.get_pressed()
+        self.keys = pg.key.get_pressed()
 
-        if keys[pg.K_q]:
+        if self.keys[pg.K_q]:
             self.runing = False
 
     def update(self):
         pass
 
     def player_control(self):
-        self.graphic.draw_player(self.player.position)
+        self.graphic.draw_player(self.player.pos_x, self.player.pos_y)
+        if self.keys[pg.K_UP]:
+            self.player.move(self.maze, Maze.TOP)
+        if self.keys[pg.K_DOWN]:
+            self.player.move(self.maze, Maze.BUTTOM)
+        if self.keys[pg.K_LEFT]:
+            self.player.move(self.maze, Maze.LEFT)
+        if self.keys[pg.K_RIGHT]:
+            self.player.move(self.maze, Maze.RIGHT)

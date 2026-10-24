@@ -90,8 +90,8 @@ class Renderer():
                     colored_cells.add((row, col))
         return colored_cells
 
-    def draw_player(self, position: Tuple[int, int]) -> None:
+    def draw_player(self, pos_x: int, pos_y: int) -> None:
         """position = (column, row) of the player in the maze (cells)."""
-        x = self.offset_x + position[0] * self.cell_size + self.cell_size // 2
-        y = self.offset_y + position[1] * self.cell_size + self.cell_size // 2
+        x = self.offset_x + pos_x * self.cell_size + self.cell_size // 2
+        y = self.offset_y + pos_y * self.cell_size + self.cell_size // 2
         pg.draw.circle(self.screen, "yellow", (x, y), self.cell_size // 3)
