@@ -2,7 +2,17 @@ import pygame as pg
 from src.ui.graphics import Renderer
 from src.logic.father import Player
 from src.logic.maze import Maze
+from src.ui.hud import Hud
+from src.ui.fake_state import make_fake_state
 from typing import List
+
+# arrow keys and WASD -> direction of the move
+KEY_TO_DIRECTION = {
+    pg.K_UP: Maze.TOP, pg.K_w: Maze.TOP,
+    pg.K_DOWN: Maze.BUTTOM, pg.K_s: Maze.BUTTOM,
+    pg.K_LEFT: Maze.LEFT, pg.K_a: Maze.LEFT,
+    pg.K_RIGHT: Maze.RIGHT, pg.K_d: Maze.RIGHT,
+}
 
 
 class GameEngine():
@@ -23,6 +33,7 @@ class GameEngine():
 
         self.calculate_layout(margin=20)
         self.runing: bool = True
+        self.result: str = "quit"    # "quit" or "menu"
         self.clock = pg.time.Clock()
 
         self.maze = Maze(self.matrix)
@@ -37,6 +48,10 @@ class GameEngine():
                                 self.offset_y, self.cell_size)
 
         self.player = Player((0, 0), 0, 0, "Ahmed")
+
+       
+        self.state = make_fake_state()
+        self.hud = Hud()
 
     def refresh_layout(self) -> None:
         """If the window size changed, recompute the maze layout."""
@@ -79,7 +94,9 @@ class GameEngine():
         self.offset_x = (self.window_width - maze_width) // 2
         self.offset_y = margin + ((self.window_height - space - (margin * 2)) - maze_height) // 2
 
-    def run(self):
+    def run(self) -> str:
+        # holding a key repeats the move: after 250 ms, then every 120 ms
+        pg.key.set_repeat(250, 120)
         while self.runing:
             self.refresh_layout()
             self.handle_event()
@@ -87,32 +104,33 @@ class GameEngine():
             self.draw()
             pg.display.flip()
             self.clock.tick(60)
+        pg.key.set_repeat()      # turn the repeat off
+        return self.result
 
     def draw(self):
         self.screen.fill("black")
         self.graphic.draw_maze()
         self.player_control()
+        self.hud.draw(self.screen, self.state)
 
     def handle_event(self):
         for event in pg.event.get():
             if event.type == pg.QUIT:
                 self.runing = False
-
-        self.keys = pg.key.get_pressed()
-
-        if self.keys[pg.K_q]:
-            self.runing = False
+            elif event.type == pg.KEYDOWN:
+                if event.key == pg.K_q:
+                    self.runing = False
+                if event.key == pg.K_r:
+                    self.result = "menu"      # go back to the menu
+                    self.runing = False
+                direction = KEY_TO_DIRECTION.get(event.key)
+                if direction is not None:
+                    # ONE key press = ONE cell
+                    self.player.move(self.maze, direction)
 
     def update(self):
         pass
 
     def player_control(self):
+        """Only draws the player (the move is done in handle_event)."""
         self.graphic.draw_player(self.player.pos_x, self.player.pos_y)
-        if self.keys[pg.K_UP]:
-            self.player.move(self.maze, Maze.TOP)
-        if self.keys[pg.K_DOWN]:
-            self.player.move(self.maze, Maze.BUTTOM)
-        if self.keys[pg.K_LEFT]:
-            self.player.move(self.maze, Maze.LEFT)
-        if self.keys[pg.K_RIGHT]:
-            self.player.move(self.maze, Maze.RIGHT)
