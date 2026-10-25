@@ -1,5 +1,7 @@
 import pygame as pg
-from typing import List, Tuple
+from typing import List
+from src.logic.father import Ghost
+
 
 # red, pink, cyan, orange (like the original game)
 GHOST_COLORS = [(255, 0, 0), (255, 184, 255), (0, 255, 255), (255, 184, 82)]
@@ -99,7 +101,7 @@ class Renderer():
         x = self.offset_x + pos_x * self.cell_size + self.cell_size // 2
         y = self.offset_y + pos_y * self.cell_size + self.cell_size // 2
         pg.draw.circle(self.screen, "yellow", (x, y), self.cell_size // 3)
-    
+
     def cell_center(self, col: int, row: int) -> tuple[int, int]:
         """Pixel position of the center of a cell."""
         x = self.offset_x + col * self.cell_size + self.cell_size // 2
@@ -119,19 +121,67 @@ class Renderer():
         for col, row in positions:
             pg.draw.circle(self.screen, "white",
                            self.cell_center(col, row), radius)
-    
-    def draw_ghosts(self, ghosts: list[tuple[int, int, bool]]) -> None:
-        """ghosts = list of (column, row, edible)."""
-        r = self.cell_size // 3
-        for i, (col, row, edible) in enumerate(ghosts):
-            x, y = self.cell_center(col, row)
-            color = EDIBLE_COLOR if edible else GHOST_COLORS[i % 4]
-            pg.draw.circle(self.screen, color, (x, y), r)           # head
-            pg.draw.rect(self.screen, color, (x - r, y, 2 * r, r))  # body
-            for dx in (-r // 2, r // 2):                            # eyes
-                pg.draw.circle(self.screen, "white",
-                               (x + dx, y - r // 4), max(2, r // 3))
-                pg.draw.circle(self.screen, "black",
-                               (x + dx, y - r // 4), max(1, r // 6))
 
-                               
+    # def draw_ghosts(self, ghosts: list[tuple[int, int, bool]]) -> None:
+    #     """ghosts = list of (column, row, edible)."""
+    #     r = self.cell_size // 3
+    #     for i, (col, row, edible) in enumerate(ghosts):
+    #         x, y = self.cell_center(col, row)
+    #         color = EDIBLE_COLOR if edible else GHOST_COLORS[i % 4]
+    #         pg.draw.circle(self.screen, color, (x, y), r)           # head
+    #         pg.draw.rect(self.screen, color, (x - r, y, 2 * r, r))  # body
+    #         for dx in (-r // 2, r // 2):                            # eyes
+    #             pg.draw.circle(self.screen, "white",
+    #                            (x + dx, y - r // 4), max(2, r // 3))
+    #             pg.draw.circle(self.screen, "black",
+    #                            (x + dx, y - r // 4), max(1, r // 6))
+
+    def draw_ghosts(self, ghosts: List[Ghost], progress: float) -> None:
+        """Draw ghosts with smooth movement."""
+        r = self.cell_size // 3
+
+        for ghost in ghosts:
+            draw_x = (
+                ghost.previous_x
+                + (ghost.pos_x - ghost.previous_x) * progress
+            )
+
+            draw_y = (
+                ghost.previous_y
+                + (ghost.pos_y - ghost.previous_y) * progress
+            )
+
+            x, y = self.cell_center(draw_x, draw_y)
+
+            color = ghost.color
+
+            # Ghost head
+            pg.draw.circle(
+                self.screen,
+                color,
+                (round(x), round(y)),
+                r,
+            )
+
+            # Ghost body
+            pg.draw.rect(
+                self.screen,
+                color,
+                (round(x - r), round(y), 2 * r, r),
+            )
+
+            # Ghost eyes
+            for dx in (-r // 2, r // 2):
+                pg.draw.circle(
+                    self.screen,
+                    "white",
+                    (round(x + dx), round(y - r // 4)),
+                    max(2, r // 3),
+                )
+
+                pg.draw.circle(
+                    self.screen,
+                    "black",
+                    (round(x + dx), round(y - r // 4)),
+                    max(1, r // 6),
+                )

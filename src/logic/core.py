@@ -1,6 +1,6 @@
 import pygame as pg
 from src.ui.graphics import Renderer
-from src.logic.father import Player
+from src.logic.father import Player, Ghost
 from src.logic.maze import Maze
 from src.ui.hud import Hud
 from src.ui.pause import PauseMenu
@@ -50,7 +50,18 @@ class GameEngine():
         self.graphic.set_layout(self.screen, self.offset_x,
                                 self.offset_y, self.cell_size)
 
-        self.player = Player((0, 0), 0, 0, "Ahmed")
+        self.player = Player((len((self.matrix)) // 2,
+                              len((self.matrix[0])) // 2),
+                             len((self.matrix)) // 2,
+                             len((self.matrix[0])) // 2, "Ahmed")
+
+        self.ghosts: List[Ghost] = [
+            Ghost(0, 0, "red", self.maze),
+            Ghost(0, (len((self.matrix)) - 1), "pink", self.maze),
+            Ghost((len(self.matrix[0]) - 1), 0, "cyan", self.maze),
+            Ghost((len(self.matrix[0]) - 1), (len((self.matrix)) - 1),
+                  "orange", self.maze)
+        ]
 
         self.state = make_fake_state(self.matrix)
         self.hud = Hud()
@@ -105,6 +116,9 @@ class GameEngine():
         move_timer = 0.0
         move_interval = 0.12
 
+        ghost_timer = 0.0
+        ghost_intreval = 0.20
+
         pg.key.set_repeat(250, 120)
         while self.runing:
             dt = self.clock.tick(60) / 1000.0
@@ -116,9 +130,22 @@ class GameEngine():
 
             move_timer += dt
 
+            # this for the player
             while move_timer >= move_interval:
                 self.player.move(self.maze)
                 move_timer -= move_interval
+
+            # this for the ghosts
+
+            ghost_timer += dt
+
+            while ghost_timer >= ghost_intreval:
+                for ghost in self.ghosts:
+                    ghost.move(
+                        self.player.pos_y,
+                        self.player.pos_x,
+                    )
+                ghost_timer -= ghost_intreval
 
             self.draw()
             pg.display.flip()
@@ -130,7 +157,8 @@ class GameEngine():
         self.graphic.draw_maze()
         self.graphic.draw_pacgums(self.state.pacgums)
         self.graphic.draw_super_pacgums(self.state.super_pacgums)
-        self.graphic.draw_ghosts(self.state.ghosts)               # new
+        # self.graphic.draw_ghosts(self.state.ghosts)               # new
+        self.graphic.draw_ghosts(self.ghosts, 0.5)               # new
         self.player_control()
         self.hud.draw(self.screen, self.state)
         if self.paused:
