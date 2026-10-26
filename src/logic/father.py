@@ -39,6 +39,7 @@ class Player():
         self.score: int = 0
         self.direction: int
         self.next_direction: int = 0
+        self.lives: int = 3
 
     def move(self, maze: Maze) -> None:
         if not maze.can_move(self.pos_y, self.pos_x, self.next_direction):

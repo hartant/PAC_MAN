@@ -37,5 +37,5 @@ def make_fake_state(maze: list[list[int]]) -> FakeState:
         lives=3,
         level=1,
         time_left=90,
-        status="playing",
+        status="game_over",
     )

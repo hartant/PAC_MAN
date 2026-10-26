@@ -9,6 +9,7 @@ from src.ui.menu import KEY_NAMES
 from src.ui.fake_state import make_fake_state
 from typing import List
 
+
 # arrow keys and WASD -> direction of the move
 KEY_TO_DIRECTION = {
     pg.K_UP: Maze.TOP, pg.K_w: Maze.TOP,
@@ -19,10 +20,10 @@ KEY_TO_DIRECTION = {
 
 
 class GameEngine():
-    def __init__(self, wx, wy, matrix):
+    def __init__(self, wx, wy, matrix, cheat_mode: bool = False):
         pg.init()
         self.matrix: List[List[int]] = matrix
-
+        self.cheat_mode = cheat_mode
         # reuse the menu window; create it only if it does not exist
         screen = pg.display.get_surface()
         if screen is None:
@@ -125,8 +126,7 @@ class GameEngine():
 
             self.refresh_layout()
             self.handle_event()
-            self.check_end
-            self.check_end()
+            # self.check_end()
 
             move_timer += dt
 
@@ -148,6 +148,7 @@ class GameEngine():
                 ghost_timer -= ghost_intreval
 
             self.draw()
+            self.touched_ghost()
             pg.display.flip()
         pg.key.set_repeat()      # turn the repeat off
         return self.result
@@ -205,9 +206,10 @@ class GameEngine():
     def update(self):
         pass
 
-    def check_end(self) -> None:
+    def check_end(self) -> None: # I stop this and fake state for new and use game_over_x()
         """If the game is over (win or lose), ask the player's name."""
         if self.state.status not in ("game_over", "victory"):
+            print(self.state.status)
             return
         end_screen = EndScreen(self.state.status, self.state.score)
         name = end_screen.run()
@@ -223,3 +225,41 @@ class GameEngine():
     def player_control(self):
         """Only draws the player (the move is done in handle_event)."""
         self.graphic.draw_player(self.player.pos_x, self.player.pos_y)
+
+    def game_over_x(self) -> None:
+        self.game_over: str = ""
+        self.player.lives = 3
+        print("Game over !!!")
+        end_screen = EndScreen("Game over", 50)
+        name = end_screen.run()
+        if name is None:                  # window closed
+            self.result = "quit"
+        else:
+            self.player_name = name
+            print(self.player_name)
+            self.result = "menu"
+
+    def touched_ghost(self) -> None:
+        self.game_over: str = ""
+        for ghost in self.ghosts:
+            if (self.player.pos_x == ghost.pos_x
+               and self.player.pos_y == ghost.pos_y):
+                if not self.cheat_mode:
+                    self.player.lives -= 1
+                    self.reset_entities_position()
+                    print(f"Player lives: {self.player.lives}")
+                if self.player.lives == 0:
+                    self.game_over_x()
+
+    def reset_entities_position(self) -> None:
+        self.player.pos_x = len((self.matrix)) // 2
+        self.player.pos_y = len((self.matrix[0])) // 2
+
+        self.ghosts[0].pos_x = 0
+        self.ghosts[0].pos_y = 0
+        self.ghosts[1].pos_x = 0
+        self.ghosts[1].pos_y = len((self.matrix)) - 1
+        self.ghosts[2].pos_x = len(self.matrix[0]) - 1
+        self.ghosts[2].pos_y = 0
+        self.ghosts[3].pos_x = len(self.matrix[0]) - 1
+        self.ghosts[3].pos_y = len((self.matrix)) - 1

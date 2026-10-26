@@ -1,13 +1,10 @@
 import sys
 import logging
 import pygame as pg
-
-
 from src.ui.config import load_config  # Or wherever your config loader is
 from src.ui.menu import MenuScreen
 from src.logic.core import GameEngine
 from mazegenerator import MazeGenerator
-
 
 
 def main() -> None:
@@ -32,23 +29,22 @@ def main() -> None:
         ("goldfish", 20)
     ]
 
-
-    while True:                 
+    while True:
         menu_screen = MenuScreen(pg.display.get_surface(), dummy_highscores)
         action = menu_screen.run()
         if action != "playing":      # "quit": leave the program
             break
 
-        
         maze = MazeGenerator(size=(15, 15), perfect=False,
                              seed=config.seed).maze
-        engine = GameEngine(1200, 900, maze)
-        if engine.run() == "quit":  
+        engine = GameEngine(1200, 900, maze, cheat_mode=True)
+        if engine.run() == "quit":
             break
 
     print("Exiting Pac-Man.")
     pg.quit()
     sys.exit(0)
+
 
 if __name__ == "__main__":
     main()
