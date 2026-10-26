@@ -42,19 +42,25 @@ class GameEngine():
 
         self.maze = Maze(self.matrix)
 
-        self.graphic = Renderer(self.matrix,
-                                self.screen,
-                                self.offset_x,
-                                self.offset_y,
-                                self.cell_size
-                                )
-        self.graphic.set_layout(self.screen, self.offset_x,
-                                self.offset_y, self.cell_size)
-
         self.player = Player((len((self.matrix)) // 2,
                               len((self.matrix[0])) // 2),
                              len((self.matrix)) // 2,
                              len((self.matrix[0])) // 2, "Ahmed")
+
+        self.graphic = Renderer(self.matrix,
+                                self.screen,
+                                self.offset_x,
+                                self.offset_y,
+                                self.cell_size,
+                                self.player
+                                )
+        self.graphic.set_layout(self.screen, self.offset_x,
+                                self.offset_y, self.cell_size)
+
+        # self.player = Player((len((self.matrix)) // 2,
+        #                       len((self.matrix[0])) // 2),
+        #                      len((self.matrix)) // 2,
+        #                      len((self.matrix[0])) // 2, "Ahmed")
 
         self.ghosts: List[Ghost] = [
             Ghost(0, 0, "red", self.maze),
@@ -115,10 +121,10 @@ class GameEngine():
     def run(self) -> str:
         # holding a key repeats the move: after 250 ms, then every 120 ms
         move_timer = 0.0
-        move_interval = 0.12
+        move_interval = 0.1
 
         ghost_timer = 0.0
-        ghost_intreval = 0.20
+        ghost_intreval = 0.2
 
         pg.key.set_repeat(250, 120)
         while self.runing:
@@ -147,20 +153,24 @@ class GameEngine():
                     )
                 ghost_timer -= ghost_intreval
 
-            self.draw()
+            progress_player = move_timer / move_interval
+
+            progress_ghost = ghost_timer / ghost_intreval
+
+            self.draw(progress_player, progress_ghost)
             self.touched_ghost()
             pg.display.flip()
         pg.key.set_repeat()      # turn the repeat off
         return self.result
 
-    def draw(self):
+    def draw(self, progress_player, progress_ghost):
         self.screen.fill("black")
         self.graphic.draw_maze()
         self.graphic.draw_pacgums(self.state.pacgums)
         self.graphic.draw_super_pacgums(self.state.super_pacgums)
         # self.graphic.draw_ghosts(self.state.ghosts)               # new
-        self.graphic.draw_ghosts(self.ghosts, 0.5)               # new
-        self.player_control()
+        self.graphic.draw_ghosts(self.ghosts, progress_ghost)               # new
+        self.graphic.draw_player(self.player.pos_x, self.player.pos_y, progress_player)
         self.hud.draw(self.screen, self.state)
         if self.paused:
             self.pause_menu.draw(self.screen)

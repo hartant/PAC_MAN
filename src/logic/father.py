@@ -41,7 +41,14 @@ class Player():
         self.next_direction: int = 0
         self.lives: int = 3
 
+        # this for the Smooth animation
+        self.previous_x: int = pos_x
+        self.previous_y: int = pos_y
+
     def move(self, maze: Maze) -> None:
+        self.previous_x = self.pos_x
+        self.previous_y = self.pos_y
+
         if not maze.can_move(self.pos_y, self.pos_x, self.next_direction):
             return
 
@@ -146,10 +153,10 @@ class Ghost():
         target = (player_row, player_col)
 
         # random crazy !!
-        k = [1, 0, 0]
-        directions = [1, 2, 4, 8]
-        if random.choice(k) == 1:
-            return random.choice(directions)
+        # k = [1, 0, 0]
+        # directions = [1, 2, 4, 8]
+        # if random.choice(k) == 1:
+        #     return random.choice(directions)
 
         if start == target:
             return 0

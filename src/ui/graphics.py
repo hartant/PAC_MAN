@@ -1,6 +1,6 @@
 import pygame as pg
 from typing import List
-from src.logic.father import Ghost
+from src.logic.father import Ghost, Player
 
 
 # red, pink, cyan, orange (like the original game)
@@ -15,13 +15,15 @@ class Renderer():
             screen: pg.Surface,
             offset_x: int,
             offset_y: int,
-            cell_size: int
+            cell_size: int,
+            player: Player
             ) -> None:
         self.matrix: List[List[int]] = matrix
         self.screen = screen
         self.offset_x: int = offset_x
         self.offset_y: int = offset_y
         self.cell_size: int = cell_size
+        self.player = player
         self.wall_thickness: int = 2
 
     def set_layout(self, screen: pg.Surface, offset_x: int,
@@ -96,10 +98,27 @@ class Renderer():
                     colored_cells.add((row, col))
         return colored_cells
 
-    def draw_player(self, pos_x: int, pos_y: int) -> None:
+    # def draw_player(self, pos_x: int, pos_y: int) -> None:
+    #     """position = (column, row) of the player in the maze (cells)."""
+    #     x = self.offset_x + pos_x * self.cell_size + self.cell_size // 2
+    #     y = self.offset_y + pos_y * self.cell_size + self.cell_size // 2
+    #     pg.draw.circle(self.screen, "yellow", (x, y), self.cell_size // 3)
+
+    def draw_player(self, pos_x: int, pos_y: int, progress) -> None:
         """position = (column, row) of the player in the maze (cells)."""
-        x = self.offset_x + pos_x * self.cell_size + self.cell_size // 2
-        y = self.offset_y + pos_y * self.cell_size + self.cell_size // 2
+        # progress = 0.166666666
+        progress = progress * progress * (3 - 2 * progress)
+        draw_x = (
+            self.player.previous_x
+            + (self.player.pos_x - self.player.previous_x) * progress
+        )
+        draw_y = (
+            self.player.previous_y
+            + (self.player.pos_y - self.player.previous_y) * progress
+        )
+
+        x = self.offset_x + draw_x * self.cell_size + self.cell_size / 2
+        y = self.offset_y + draw_y * self.cell_size + self.cell_size / 2
         pg.draw.circle(self.screen, "yellow", (x, y), self.cell_size // 3)
 
     def cell_center(self, col: int, row: int) -> tuple[int, int]:

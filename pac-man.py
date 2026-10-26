@@ -37,7 +37,7 @@ def main() -> None:
 
         maze = MazeGenerator(size=(15, 15), perfect=False,
                              seed=config.seed).maze
-        engine = GameEngine(1200, 900, maze, cheat_mode=True)
+        engine = GameEngine(1200, 900, maze, cheat_mode=False)
         if engine.run() == "quit":
             break
 
