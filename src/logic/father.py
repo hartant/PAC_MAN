@@ -29,12 +29,10 @@ class Player():
     def __init__(self,
                  position: Tuple[int],
                  pos_x: int,
-                 pos_y: int,
-                 name: str) -> None:
+                 pos_y: int) -> None:
         self.position: Tuple[int] = position
         self.pos_x = pos_x
         self.pos_y = pos_y
-        self.name: str = name
         self.speed: int = 5
         self.score: int = 0
         self.direction: int

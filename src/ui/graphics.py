@@ -136,12 +136,14 @@ class Renderer():
                 pg.draw.circle(self.screen, (255, 220, 170),
                                self.cell_center(col, row), radius)
 
-    def draw_super_pacgums(self, positions: set[tuple[int, int]]) -> None:
+    def draw_super_pacgums(self, positions: Dict) -> None:
         """Big dots. positions = set of (column, row) cells."""
         radius = max(4, self.cell_size // 4)
-        for col, row in positions:
-            pg.draw.circle(self.screen, "white",
-                           self.cell_center(col, row), radius)
+        for pos, exist in positions.items():
+            col, row = pos
+            if exist:
+                pg.draw.circle(self.screen, "white",
+                               self.cell_center(col, row), radius)
 
     # def draw_ghosts(self, ghosts: list[tuple[int, int, bool]]) -> None:
     #     """ghosts = list of (column, row, edible)."""

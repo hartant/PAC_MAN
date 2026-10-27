@@ -23,21 +23,25 @@ if __name__ == "__main__":
     pg.display.set_caption("Pac-Man")
 
     dummy_highscores = [
-        ("Sannaka", 1110),
-        ("foliole", 20),
-        ("Marmelade", 20),
-        ("goldfish", 20)
+        ("ahmed", 1110),
+        ("ghost", 20),
+        ("paca", 20),
+        ("rika", 20)
     ]
 
     while True:
         menu_screen = MenuScreen(pg.display.get_surface(), dummy_highscores)
         action = menu_screen.run()
-        if action != "playing":      # "quit": leave the program
-            break
 
         maze = MazeGenerator(size=(15, 15), perfect=False,
                              seed=config.seed).maze
         engine = GameEngine(1200, 900, maze, cheat_mode=False)
+
+        dummy_highscores = engine.get_top_players()
+
+        if action != "playing":      # "quit": leave the program
+            break
+
         if engine.run() == "quit":
             break
 

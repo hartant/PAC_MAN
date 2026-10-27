@@ -7,7 +7,7 @@ from src.ui.pause import PauseMenu
 from src.ui.end_screen import EndScreen
 from src.ui.menu import KEY_NAMES, MainMenu
 from src.ui.fake_state import make_fake_state
-from typing import List
+from typing import List, Tuple
 from src.logic.packgum import Pacgum
 
 
@@ -46,7 +46,7 @@ class GameEngine():
         self.player = Player((len((self.matrix)) // 2,
                               len((self.matrix[0])) // 2),
                              len((self.matrix)) // 2,
-                             len((self.matrix[0])) // 2, "Ahmed")
+                             len((self.matrix[0])) // 2)
 
         self.graphic = Renderer(self.matrix,
                                 self.screen,
@@ -74,6 +74,8 @@ class GameEngine():
         self.paused: bool = False
         self.player_name: str = ""
         self.pause_menu = PauseMenu()
+
+        self.players: List[Tuple[str, int]] = []
 
     def refresh_layout(self) -> None:
         """If the window size changed, recompute the maze layout."""
@@ -167,7 +169,7 @@ class GameEngine():
         # print(self.packgum.pacgums_state)
         self.packgum.eat_pacgum()
         self.graphic.draw_pacgums(self.packgum.pacgums_state)
-        self.graphic.draw_super_pacgums(self.state.super_pacgums)
+        self.graphic.draw_super_pacgums(self.packgum.super_pacgums_state)
         # self.graphic.draw_ghosts(self.state.ghosts)               # new
         self.graphic.draw_ghosts(self.ghosts, progress_ghost)               # new
         self.graphic.draw_player(self.player.pos_x, self.player.pos_y, progress_player)
@@ -246,8 +248,10 @@ class GameEngine():
             self.result = "quit"
         else:
             self.player_name = name
-            print(self.player_name)
+            print(f"player{self.player_name}")
             print(self.player.score)
+            self.players.append((self.player_name, self.player.score))
+            print(self.player_name, self.player.score)
             self.result = "menu"
 
     def touched_ghost(self) -> None:
@@ -263,9 +267,10 @@ class GameEngine():
                     # methode for reset the game data !!
                     self.game_over_x()
                     self.packgum.pacgum_state()
-                    # self.player.update_score(0)
                     self.player.score = 0
                     self.player.lives = 3
+                    # self.players.append((self.player_name, self.player.score))
+                    # print(self.player_name, self.player.score)
 
     def reset_entities_position(self) -> None:
         self.player.pos_x = len((self.matrix)) // 2
@@ -279,3 +284,6 @@ class GameEngine():
         self.ghosts[2].pos_y = 0
         self.ghosts[3].pos_x = len(self.matrix[0]) - 1
         self.ghosts[3].pos_y = len((self.matrix)) - 1
+
+    def get_top_players(self) -> List[Tuple[str, int]]:
+        return self.players

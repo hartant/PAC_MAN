@@ -10,10 +10,12 @@ class Pacgum():
         self.pacgums_point: int = 5
         self.super_pacgums_point: int = 10
         self.pacgums_state: Dict = {}
+        self.super_pacgums_state: Dict = {}
         self.activate()
 
     def activate(self) -> None:
         self.pacgum_state()
+        self.super_pacgum_state()
 
     def pacgum_state(self) -> None:
         """put dots in the corridors."""
@@ -30,9 +32,17 @@ class Pacgum():
 
     def eat_pacgum(self) -> None:
         if self.pacgums_state.get((self.player.pos_x, self.player.pos_y)):
-            self.pacgums_state.update({(self.player.pos_x, self.player.pos_y): False})
+            self.pacgums_state.update(
+                {(self.player.pos_x, self.player.pos_y): False}
+            )
             self.player.update_score(self.pacgums_point)
             print(f"=========== update_score: {self.player.score}")
+
+        if self.super_pacgums_state.get((self.player.pos_x, self.player.pos_y)):
+            self.super_pacgums_state.update(
+                {(self.player.pos_x, self.player.pos_y): False}
+                )
+            self.player.update_score(self.super_pacgums_point)
 
     def reset(self) -> None:
         # we !!!!!!!!!!!!!!!111
@@ -47,4 +57,15 @@ class Pacgum():
                     self.pacgums_state.update({(col, row): True})
 
     def super_pacgum_state(self) -> None:
+        """put large dots in the corridors. :)"""
+        rows = len(self.matrix)
+        cols = len(self.matrix[0])
+        self.super_pacgums_state: Dict = {
+            (0, 0): True,
+            (cols - 1, 0): True,
+            (0, rows - 1): True,
+            (cols - 1, rows - 1): True
+        }
+
+    def super_effect(self) -> None:
         pass
