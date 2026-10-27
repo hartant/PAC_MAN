@@ -79,6 +79,9 @@ class Player():
         self.pos_x = self.position[0]
         self.pos_y = self.position[1]
 
+    def update_score(self, value: int) -> None:
+        self.score += value
+
 
 class Ghost():
     DIRECTIONS = (

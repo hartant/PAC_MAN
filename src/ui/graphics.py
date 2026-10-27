@@ -1,5 +1,5 @@
 import pygame as pg
-from typing import List
+from typing import List, Dict
 from src.logic.father import Ghost, Player
 
 
@@ -127,12 +127,14 @@ class Renderer():
         y = self.offset_y + row * self.cell_size + self.cell_size // 2
         return x, y
 
-    def draw_pacgums(self, positions: set[tuple[int, int]]) -> None:
+    def draw_pacgums(self, positions: Dict) -> None:
         """Small dots. positions = set of (column, row) cells."""
         radius = max(2, self.cell_size // 10)
-        for col, row in positions:
-            pg.draw.circle(self.screen, (255, 220, 170),
-                           self.cell_center(col, row), radius)
+        for pos, exist in positions.items():
+            col, row = pos
+            if exist:
+                pg.draw.circle(self.screen, (255, 220, 170),
+                               self.cell_center(col, row), radius)
 
     def draw_super_pacgums(self, positions: set[tuple[int, int]]) -> None:
         """Big dots. positions = set of (column, row) cells."""

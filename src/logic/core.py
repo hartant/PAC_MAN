@@ -5,9 +5,10 @@ from src.logic.maze import Maze
 from src.ui.hud import Hud
 from src.ui.pause import PauseMenu
 from src.ui.end_screen import EndScreen
-from src.ui.menu import KEY_NAMES
+from src.ui.menu import KEY_NAMES, MainMenu
 from src.ui.fake_state import make_fake_state
 from typing import List
+from src.logic.packgum import Pacgum
 
 
 # arrow keys and WASD -> direction of the move
@@ -57,11 +58,6 @@ class GameEngine():
         self.graphic.set_layout(self.screen, self.offset_x,
                                 self.offset_y, self.cell_size)
 
-        # self.player = Player((len((self.matrix)) // 2,
-        #                       len((self.matrix[0])) // 2),
-        #                      len((self.matrix)) // 2,
-        #                      len((self.matrix[0])) // 2, "Ahmed")
-
         self.ghosts: List[Ghost] = [
             Ghost(0, 0, "red", self.maze),
             Ghost(0, (len((self.matrix)) - 1), "pink", self.maze),
@@ -69,6 +65,8 @@ class GameEngine():
             Ghost((len(self.matrix[0]) - 1), (len((self.matrix)) - 1),
                   "orange", self.maze)
         ]
+
+        self.packgum: Pacgum = Pacgum(self.matrix, self.player)
 
         self.state = make_fake_state(self.matrix)
         self.hud = Hud()
@@ -166,7 +164,9 @@ class GameEngine():
     def draw(self, progress_player, progress_ghost):
         self.screen.fill("black")
         self.graphic.draw_maze()
-        self.graphic.draw_pacgums(self.state.pacgums)
+        # print(self.packgum.pacgums_state)
+        self.packgum.eat_pacgum()
+        self.graphic.draw_pacgums(self.packgum.pacgums_state)
         self.graphic.draw_super_pacgums(self.state.super_pacgums)
         # self.graphic.draw_ghosts(self.state.ghosts)               # new
         self.graphic.draw_ghosts(self.ghosts, progress_ghost)               # new
@@ -247,6 +247,7 @@ class GameEngine():
         else:
             self.player_name = name
             print(self.player_name)
+            print(self.player.score)
             self.result = "menu"
 
     def touched_ghost(self) -> None:
@@ -259,7 +260,12 @@ class GameEngine():
                     self.reset_entities_position()
                     print(f"Player lives: {self.player.lives}")
                 if self.player.lives == 0:
+                    # methode for reset the game data !!
                     self.game_over_x()
+                    self.packgum.pacgum_state()
+                    # self.player.update_score(0)
+                    self.player.score = 0
+                    self.player.lives = 3
 
     def reset_entities_position(self) -> None:
         self.player.pos_x = len((self.matrix)) // 2

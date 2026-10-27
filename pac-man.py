@@ -7,7 +7,7 @@ from src.logic.core import GameEngine
 from mazegenerator import MazeGenerator
 
 
-def main() -> None:
+if __name__ == "__main__":
     if len(sys.argv) != 2:
         print("Usage: python3 pac-man.py config.json")
         sys.exit(1)
@@ -44,7 +44,3 @@ def main() -> None:
     print("Exiting Pac-Man.")
     pg.quit()
     sys.exit(0)
-
-
-if __name__ == "__main__":
-    main()
