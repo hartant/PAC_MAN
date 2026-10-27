@@ -39,6 +39,8 @@ class Player():
         self.next_direction: int = 0
         self.lives: int = 3
 
+        self.super_mode: bool = False
+
         # this for the Smooth animation
         self.previous_x: int = pos_x
         self.previous_y: int = pos_y

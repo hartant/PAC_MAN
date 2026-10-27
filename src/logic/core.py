@@ -66,7 +66,7 @@ class GameEngine():
                   "orange", self.maze)
         ]
 
-        self.packgum: Pacgum = Pacgum(self.matrix, self.player)
+        self.packgum: Pacgum = Pacgum(self.matrix, self.player, self.ghosts)
 
         self.state = make_fake_state(self.matrix)
         self.hud = Hud()
@@ -217,22 +217,6 @@ class GameEngine():
 
     def update(self):
         pass
-
-    # def check_end(self) -> None: # I stop this and fake state for new and use game_over_x()
-    #     """If the game is over (win or lose), ask the player's name."""
-    #     if self.state.status not in ("game_over", "victory"):
-    #         print(self.state.status)
-    #         return
-    #     end_screen = EndScreen(self.state.status, self.state.score)
-    #     name = end_screen.run()
-    #     if name is None:                  # window closed
-    #         self.result = "quit"
-    #     else:
-    #         self.player_name = name
-    #         # friend: save the score here, example:
-    #         # save_highscore(name, self.state.score)
-    #         self.result = "menu"
-    #     self.runing = False
 
     def player_control(self):
         """Only draws the player (the move is done in handle_event)."""

@@ -1,9 +1,12 @@
-from src.logic.father import Player
+from src.logic.father import Player, Ghost
 from typing import List, Dict
 
 
 class Pacgum():
-    def __init__(self, matrix: List[List[int]], player: Player) -> None:
+    def __init__(self,
+                 matrix: List[List[int]],
+                 player: Player,
+                 ghosts: List[Ghost]) -> None:
         self.matrix: List[List[int]] = matrix
         self.player = player
 
@@ -69,3 +72,15 @@ class Pacgum():
 
     def super_effect(self) -> None:
         pass
+
+
+# import time
+
+# start = time.monotonic()
+
+# elapsed = time.monotonic() - start
+
+# print(elapsed)
+
+# if time.monotonic() - super_start >= super_duration:
+#     self.player.super_mode = False
