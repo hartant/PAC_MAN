@@ -159,6 +159,7 @@ class GameEngine():
 
             self.draw(progress_player, progress_ghost)
             self.touched_ghost()
+            self.check_victory()
             pg.display.flip()
         pg.key.set_repeat()      # turn the repeat off
         return self.result
@@ -173,6 +174,9 @@ class GameEngine():
         # self.graphic.draw_ghosts(self.state.ghosts)               # new
         self.graphic.draw_ghosts(self.ghosts, progress_ghost)               # new
         self.graphic.draw_player(self.player.pos_x, self.player.pos_y, progress_player)
+        # the HUD reads the REAL numbers of the player
+        self.state.score = self.player.score
+        self.state.lives = self.player.lives
         self.hud.draw(self.screen, self.state)
         if self.paused:
             self.pause_menu.draw(self.screen)
@@ -193,10 +197,11 @@ class GameEngine():
                 if event.key == pg.K_r:
                     self.result = "menu"      # go back to the menu
                     self.runing = False
+                # TEMPORARY test keys (remove when the real logic is ready)
                 if event.key == pg.K_g:
-                    self.state.status = "game_over"
+                    self.game_over_x()
                 if event.key == pg.K_v:
-                    self.state.status = "victory"
+                    self.victory_x()
                 direction = KEY_TO_DIRECTION.get(event.key)
                 if direction is not None:
                     # ONE key press = ONE cell
@@ -223,20 +228,36 @@ class GameEngine():
         self.graphic.draw_player(self.player.pos_x, self.player.pos_y)
 
     def game_over_x(self) -> None:
-        self.game_over: str = ""
-        self.player.lives = 3
+        """No lives left: ask the name, save it, go back to the menu."""
         print("Game over !!!")
-        end_screen = EndScreen("Game over", 50)
+        end_screen = EndScreen("game_over", self.player.score)
         name = end_screen.run()
         if name is None:                  # window closed
             self.result = "quit"
         else:
             self.player_name = name
-            print(f"player{self.player_name}")
-            print(self.player.score)
-            self.players.append((self.player_name, self.player.score))
-            print(self.player_name, self.player.score)
+            self.players.append((name, self.player.score))
             self.result = "menu"
+        self.runing = False               # stop the game loop
+
+    def victory_x(self) -> None:
+        """All pacgums eaten: ask the name, save it, go back to the menu."""
+        end_screen = EndScreen("victory", self.player.score)
+        name = end_screen.run()
+        if name is None:                  # window closed
+            self.result = "quit"
+        else:
+            self.player_name = name
+            self.players.append((name, self.player.score))
+            self.result = "menu"
+        self.runing = False               # stop the game loop
+
+    def check_victory(self) -> None:
+        """Called in every frame: did the player eat all the pacgums?"""
+        if not self.runing:
+            return
+        if not any(self.packgum.pacgums_state.values()):
+            self.victory_x()
 
     def touched_ghost(self) -> None:
         self.game_over: str = ""
