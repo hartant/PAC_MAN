@@ -1,5 +1,5 @@
 from src.logic.maze import Maze
-from typing import List, Tuple
+from typing import List, Tuple, Dict
 from collections import deque
 import random
 
@@ -114,14 +114,22 @@ class Ghost():
 
         self.previous_x = pos_x
         self.previous_y = pos_y
+        self.opposit: Dict = {
+            1: 4,
+            2: 8,
+            4: 1,
+            8: 2
+        }
 
-    def move(self, player_row: int, player_col: int) -> None:
+    def move(self, player_row: int, player_col: int, supermode: bool) -> None:  # need to add the flag of super mode
         direction = self.find_direction(
             self.pos_y,
             self.pos_x,
             player_row,
             player_col
         )
+        if supermode: # reverse the direction
+            direction = self.opposit.get(direction, 0)
 
         if direction == 0:
             return
@@ -156,7 +164,7 @@ class Ghost():
         target = (player_row, player_col)
 
         # random crazy !!
-        # k = [1, 0, 0]
+        # k = [1, 0, 0, 0]
         # directions = [1, 2, 4, 8]
         # if random.choice(k) == 1:
         #     return random.choice(directions)

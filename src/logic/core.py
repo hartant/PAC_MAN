@@ -156,6 +156,7 @@ class GameEngine():
                     ghost.move(
                         self.player.pos_y,
                         self.player.pos_x,
+                        self.packgum.supermode          # we add the flag
                     )
                 ghost_timer -= ghost_intreval
 
@@ -257,6 +258,7 @@ class GameEngine():
                     # methode for reset the game data !!
                     self.game_over_x()
                     self.packgum.pacgum_state()
+                    self.packgum.super_pacgum_state()
                     self.player.score = 0
                     self.player.lives = 3
 
