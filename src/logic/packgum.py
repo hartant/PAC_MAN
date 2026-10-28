@@ -1,19 +1,25 @@
 from src.logic.father import Player, Ghost
 from typing import List, Dict
+import time
 
 
 class Pacgum():
     def __init__(self,
                  matrix: List[List[int]],
                  player: Player,
-                 ghosts: List[Ghost]) -> None:
+                 ghosts: List[Ghost],
+                 cheat_mode: List[bool]) -> None:
         self.matrix: List[List[int]] = matrix
-        self.player = player
+        self.player: Player = player
+        self.cheat_mode: List[bool] = cheat_mode
 
         self.pacgums_point: int = 5
         self.super_pacgums_point: int = 10
         self.pacgums_state: Dict = {}
         self.super_pacgums_state: Dict = {}
+        self.supermode_time: int = 10
+        self.supermode: bool = False
+        self.start: float = 0
         self.activate()
 
     def activate(self) -> None:
@@ -34,6 +40,7 @@ class Pacgum():
                     self.pacgums_state.update({(col, row): True})
 
     def eat_pacgum(self) -> None:
+        i = 0
         if self.pacgums_state.get((self.player.pos_x, self.player.pos_y)):
             self.pacgums_state.update(
                 {(self.player.pos_x, self.player.pos_y): False}
@@ -42,10 +49,26 @@ class Pacgum():
             print(f"=========== update_score: {self.player.score}")
 
         if self.super_pacgums_state.get((self.player.pos_x, self.player.pos_y)):
+            print("== eat spacgum")
             self.super_pacgums_state.update(
                 {(self.player.pos_x, self.player.pos_y): False}
                 )
             self.player.update_score(self.super_pacgums_point)
+            # activate pacgum
+            self.start = time.monotonic()
+
+            # self.super_effect(self.start)
+            self.cheat_mode[0] = True
+            self.supermode = True
+
+        elapsed = time.monotonic() - self.start
+        print(f"mode: {elapsed} - {self.start} // ")
+        if elapsed >= self.supermode_time:
+            self.supermode = False
+            self.cheat_mode[0] = False
+            elapsed = 0
+            i = 0
+            print("mode_: 0")
 
     def reset(self) -> None:
         # we !!!!!!!!!!!!!!!111
@@ -70,9 +93,30 @@ class Pacgum():
             (cols - 1, rows - 1): True
         }
 
-    def super_effect(self) -> None:
-        pass
+    def super_effect(self, start: float) -> None:   # can integreat cheatmode for save time !!
+        self.cheat_mode[0] = True
+        self.supermode = True
 
+        elapsed = time.monotonic() - start
+        print(f"mode: {elapsed} - {start} // ")
+        if elapsed >= self.supermode_time:
+            self.supermode = False
+            self.cheat_mode[0] = False
+            elapsed = 0
+            print("mode_: 0")
+
+    # def super_effect(self, start: float) -> None:   # can integreat cheatmode for save time !!
+    #     self.cheat_mode[0] = True
+    #     self.supermode = True
+    #     # start = time.monotonic()
+
+    #     elapsed = time.monotonic() - start
+    #     print(f"mode: {elapsed} - {start} // ")
+    #     if elapsed >= self.supermode_time:
+    #         self.supermode = False
+    #         self.cheat_mode[0] = False
+    #         elapsed = 0
+    #         print("mode_: 0")
 
 # import time
 

@@ -24,7 +24,8 @@ class GameEngine():
     def __init__(self, wx, wy, matrix, cheat_mode: bool = False):
         pg.init()
         self.matrix: List[List[int]] = matrix
-        self.cheat_mode = cheat_mode
+        self.cheat_mode: List[bool] = [False]
+        self.cheat_mode[0] = cheat_mode
         # reuse the menu window; create it only if it does not exist
         screen = pg.display.get_surface()
         if screen is None:
@@ -66,7 +67,12 @@ class GameEngine():
                   "orange", self.maze)
         ]
 
-        self.packgum: Pacgum = Pacgum(self.matrix, self.player, self.ghosts)
+        self.packgum: Pacgum = Pacgum(
+            self.matrix,
+            self.player,
+            self.ghosts,
+            self.cheat_mode
+        )
 
         self.state = make_fake_state(self.matrix)
         self.hud = Hud()
@@ -157,8 +163,8 @@ class GameEngine():
 
             progress_ghost = ghost_timer / ghost_intreval
 
-            self.draw(progress_player, progress_ghost)
             self.touched_ghost()
+            self.draw(progress_player, progress_ghost)
             pg.display.flip()
         pg.key.set_repeat()      # turn the repeat off
         return self.result
@@ -167,7 +173,7 @@ class GameEngine():
         self.screen.fill("black")
         self.graphic.draw_maze()
         # print(self.packgum.pacgums_state)
-        self.packgum.eat_pacgum()
+        self.packgum.eat_pacgum()  # eat super pacgame ()
         self.graphic.draw_pacgums(self.packgum.pacgums_state)
         self.graphic.draw_super_pacgums(self.packgum.super_pacgums_state)
         # self.graphic.draw_ghosts(self.state.ghosts)               # new
@@ -243,7 +249,7 @@ class GameEngine():
         for ghost in self.ghosts:
             if (self.player.pos_x == ghost.pos_x
                and self.player.pos_y == ghost.pos_y):
-                if not self.cheat_mode:
+                if not self.cheat_mode[0]:
                     self.player.lives -= 1
                     self.reset_entities_position()
                     print(f"Player lives: {self.player.lives}")
@@ -253,8 +259,6 @@ class GameEngine():
                     self.packgum.pacgum_state()
                     self.player.score = 0
                     self.player.lives = 3
-                    # self.players.append((self.player_name, self.player.score))
-                    # print(self.player_name, self.player.score)
 
     def reset_entities_position(self) -> None:
         self.player.pos_x = len((self.matrix)) // 2
