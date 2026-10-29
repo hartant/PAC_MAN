@@ -13,7 +13,9 @@ from dataclasses import dataclass, field
 from typing import Any
 
 MIN_MAZE_SIZE = 5
-MAX_MAZE_SIZE = 50
+MAX_MAZE_SIZE = 30
+# default maze sizes of the 10 levels (a bigger maze needs more time)
+DEFAULT_SIZES = (15, 15, 15, 17, 17, 17, 17, 19, 19, 19)
 
 
 @dataclass
@@ -25,7 +27,8 @@ class LevelConfig:
 
 
 def _default_levels() -> list[LevelConfig]:
-    return [LevelConfig(15, 15)]
+    """10 levels, the maze grows a little as we go (15 -> 19)."""
+    return [LevelConfig(size, size) for size in DEFAULT_SIZES]
 
 
 @dataclass
@@ -40,6 +43,7 @@ class GameConfig:
     points_per_ghost: int = 200
     seed: int = 42
     level_max_time: int = 90
+    cheat_mode: bool = False
     levels: list[LevelConfig] = field(default_factory=_default_levels)
 
 
@@ -62,6 +66,18 @@ def _read_int(data: dict[str, Any], key: str, default: int,
         logging.warning("Config: '%s' must be between %d and %d (got %d). "
                         "Using default: %d", key, minimum, maximum,
                         value, default)
+        return default
+    return value
+
+
+def _read_bool(data: dict[str, Any], key: str, default: bool) -> bool:
+    """Return data[key] if it is true or false, else the default."""
+    if key not in data:
+        return default
+    value = data[key]
+    if not isinstance(value, bool):
+        logging.warning("Config: '%s' must be true or false (got %r). "
+                        "Using default: %s", key, value, default)
         return default
     return value
 
@@ -157,5 +173,6 @@ def load_config(filepath: str) -> GameConfig:
     config.seed = _read_int(data, "seed", config.seed, -2**31, 2**31 - 1)
     config.level_max_time = _read_int(
         data, "level_max_time", config.level_max_time, 10, 3600)
+    config.cheat_mode = _read_bool(data, "cheat_mode", config.cheat_mode)
     config.levels = _read_levels(data)
     return config

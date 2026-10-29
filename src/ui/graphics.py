@@ -1,14 +1,35 @@
+"""Draws the maze, the dots, the player and the ghosts. No game rules here.
+
+The game engine says what to draw, this file only knows how.
+"""
+
+import math
+from typing import Dict, List, Tuple
+
 import pygame as pg
-from typing import List, Dict
-from src.logic.father import Ghost, Player
 
+from src.logic.father import EATEN, Ghost, Player
+from src.logic.maze import Maze
 
-# red, pink, cyan, orange (like the original game)
-GHOST_COLORS = [(255, 0, 0), (255, 184, 255), (0, 255, 255), (255, 184, 82)]
-EDIBLE_COLOR = (40, 40, 255)
+Color = Tuple[int, int, int]
+
+WALL_COLOR: Color = (50, 80, 255)
+CELL_42_COLOR: Color = (25, 35, 130)
+PACGUM_COLOR: Color = (255, 220, 170)
+SUPER_COLOR: Color = (255, 255, 255)
+PLAYER_COLOR: Color = (255, 255, 0)
+EDIBLE_COLOR: Color = (40, 40, 255)
+FLASH_COLOR: Color = (240, 240, 240)
+
+# direction -> angle on the screen (degrees) where Pac-Man looks
+ANGLES: Dict[int, int] = {
+    Maze.RIGHT: 0, Maze.TOP: 90, Maze.LEFT: 180, Maze.BUTTOM: 270,
+}
 
 
 class Renderer():
+    """Draws one level. A new Renderer is made for each maze."""
+
     def __init__(
             self,
             matrix: List[List[int]],
@@ -18,6 +39,16 @@ class Renderer():
             cell_size: int,
             player: Player
             ) -> None:
+        """Keep what we need to draw.
+
+        Args:
+            matrix: the maze (numbers 0 to 15, see maze.py).
+            screen: the window.
+            offset_x: x of the left of the maze, in pixels.
+            offset_y: y of the top of the maze, in pixels.
+            cell_size: size of one cell, in pixels.
+            player: the player (we read its position).
+        """
         self.matrix: List[List[int]] = matrix
         self.screen = screen
         self.offset_x: int = offset_x
@@ -36,175 +67,116 @@ class Renderer():
         self.wall_thickness = max(2, cell_size // 12)
 
     def draw_maze(self) -> None:
-        colored_cells = self.get_42_cells()
-        rows = len(self.matrix)
-        cols = len(self.matrix[0])
-        for row in range(rows):
-            for col in range(cols):
-                cell = self.matrix[row][col]
-
-                x = self.offset_x + col * self.cell_size
-                y = self.offset_y + row * self.cell_size
-
-                if (row, col) in colored_cells:
-                    pg.draw.rect(
-                        self.screen,
-                        (40, 100, 255),
-                        (x, y, self.cell_size, self.cell_size)
-                    )
-
-                if cell & 1:
-                    pg.draw.line(
-                            self.screen,
-                            "white",
-                            (x, y),
-                            (x + self.cell_size, y),
-                            self.wall_thickness
-                        )
-
-                if cell & 2:
-                    pg.draw.line(
-                            self.screen,
-                            "white",
-                            (x + self.cell_size, y),
-                            (x + self.cell_size, y + self.cell_size),
-                            self.wall_thickness
-                        )
-
-                if cell & 4:
-                    pg.draw.line(
-                            self.screen,
-                            "white",
-                            (x, y + self.cell_size),
-                            (x + self.cell_size, y + self.cell_size),
-                            self.wall_thickness
-                        )
-
-                if cell & 8:
-                    pg.draw.line(
-                            self.screen,
-                            "white",
-                            (x, y),
-                            (x, y + self.cell_size),
-                            self.wall_thickness
-                        )
-
-    def get_42_cells(self) -> set:
-        """The '42' cells are the ones closed on all 4 sides (value 15)."""
-        colored_cells: set = set()
+        """Draw the walls (and the "42" cells in a different color)."""
+        size = self.cell_size
         for row, line in enumerate(self.matrix):
             for col, cell in enumerate(line):
+                x = self.offset_x + col * size
+                y = self.offset_y + row * size
+
                 if cell == 15:
-                    colored_cells.add((row, col))
-        return colored_cells
+                    pg.draw.rect(self.screen, CELL_42_COLOR,
+                                 (x, y, size, size))
+                # one bit = one wall: 1 top, 2 right, 4 bottom, 8 left
+                if cell & Maze.TOP:
+                    self.draw_wall((x, y), (x + size, y))
+                if cell & Maze.RIGHT:
+                    self.draw_wall((x + size, y), (x + size, y + size))
+                if cell & Maze.BUTTOM:
+                    self.draw_wall((x, y + size), (x + size, y + size))
+                if cell & Maze.LEFT:
+                    self.draw_wall((x, y), (x, y + size))
 
-    # def draw_player(self, pos_x: int, pos_y: int) -> None:
-    #     """position = (column, row) of the player in the maze (cells)."""
-    #     x = self.offset_x + pos_x * self.cell_size + self.cell_size // 2
-    #     y = self.offset_y + pos_y * self.cell_size + self.cell_size // 2
-    #     pg.draw.circle(self.screen, "yellow", (x, y), self.cell_size // 3)
+    def draw_wall(self, start: Tuple[int, int], end: Tuple[int, int]) -> None:
+        """One piece of wall."""
+        pg.draw.line(self.screen, WALL_COLOR, start, end,
+                     self.wall_thickness)
 
-    def draw_player(self, pos_x: int, pos_y: int, progress) -> None:
-        """position = (column, row) of the player in the maze (cells)."""
-        # progress = 0.166666666
-        progress = progress * progress * (3 - 2 * progress)
-        draw_x = (
-            self.player.previous_x
-            + (self.player.pos_x - self.player.previous_x) * progress
-        )
-        draw_y = (
-            self.player.previous_y
-            + (self.player.pos_y - self.player.previous_y) * progress
-        )
+    def cell_center(self, col: float, row: float) -> Tuple[int, int]:
+        """Pixel position of the center of a cell (can be between 2 cells).
 
-        x = self.offset_x + draw_x * self.cell_size + self.cell_size / 2
-        y = self.offset_y + draw_y * self.cell_size + self.cell_size / 2
-        pg.draw.circle(self.screen, "yellow", (x, y), self.cell_size // 3)
+        Example: col=3.5 is half way between column 3 and column 4.
+        """
+        x = self.offset_x + col * self.cell_size + self.cell_size / 2
+        y = self.offset_y + row * self.cell_size + self.cell_size / 2
+        return round(x), round(y)
 
-    def cell_center(self, col: int, row: int) -> tuple[int, int]:
-        """Pixel position of the center of a cell."""
-        x = self.offset_x + col * self.cell_size + self.cell_size // 2
-        y = self.offset_y + row * self.cell_size + self.cell_size // 2
-        return x, y
-
-    def draw_pacgums(self, positions: Dict) -> None:
-        """Small dots. positions = set of (column, row) cells."""
+    def draw_pacgums(self, positions: Dict[Tuple[int, int], bool]) -> None:
+        """Small dots. positions = {(column, row): still_there}."""
         radius = max(2, self.cell_size // 10)
-        for pos, exist in positions.items():
-            col, row = pos
+        for (col, row), exist in positions.items():
             if exist:
-                pg.draw.circle(self.screen, (255, 220, 170),
+                pg.draw.circle(self.screen, PACGUM_COLOR,
                                self.cell_center(col, row), radius)
 
-    def draw_super_pacgums(self, positions: Dict) -> None:
-        """Big dots. positions = set of (column, row) cells."""
+    def draw_super_pacgums(self,
+                           positions: Dict[Tuple[int, int], bool]) -> None:
+        """Big dots. They blink like in the real game."""
+        if pg.time.get_ticks() // 250 % 2 == 1:
+            return
         radius = max(4, self.cell_size // 4)
-        for pos, exist in positions.items():
-            col, row = pos
+        for (col, row), exist in positions.items():
             if exist:
-                pg.draw.circle(self.screen, "white",
+                pg.draw.circle(self.screen, SUPER_COLOR,
                                self.cell_center(col, row), radius)
 
-    # def draw_ghosts(self, ghosts: list[tuple[int, int, bool]]) -> None:
-    #     """ghosts = list of (column, row, edible)."""
-    #     r = self.cell_size // 3
-    #     for i, (col, row, edible) in enumerate(ghosts):
-    #         x, y = self.cell_center(col, row)
-    #         color = EDIBLE_COLOR if edible else GHOST_COLORS[i % 4]
-    #         pg.draw.circle(self.screen, color, (x, y), r)           # head
-    #         pg.draw.rect(self.screen, color, (x - r, y, 2 * r, r))  # body
-    #         for dx in (-r // 2, r // 2):                            # eyes
-    #             pg.draw.circle(self.screen, "white",
-    #                            (x + dx, y - r // 4), max(2, r // 3))
-    #             pg.draw.circle(self.screen, "black",
-    #                            (x + dx, y - r // 4), max(1, r // 6))
+    def draw_player(self) -> None:
+        """Pac-Man: a yellow circle with a mouth that opens and closes."""
+        player = self.player
+        # slide from the previous cell to the real cell
+        progress = player.progress
+        move_x = player.pos_x - player.previous_x
+        move_y = player.pos_y - player.previous_y
+        cx, cy = self.cell_center(player.previous_x + move_x * progress,
+                                  player.previous_y + move_y * progress)
+        radius = self.cell_size // 3 + 1
 
-    def draw_ghosts(self, ghosts: List[Ghost], progress: float) -> None:
-        """Draw ghosts with smooth movement."""
-        r = self.cell_size // 3
+        if player.moving:
+            opening = 8 + 37 * abs(math.sin(pg.time.get_ticks() / 90))
+        else:
+            opening = 25
+        facing = ANGLES.get(player.direction or player.next_direction, 0)
 
+        points: List[Tuple[float, float]] = [(cx, cy)]
+        angle = facing + opening
+        while angle <= facing + 360 - opening:
+            rad = math.radians(angle)
+            points.append((cx + radius * math.cos(rad),
+                           cy - radius * math.sin(rad)))
+            angle += 10
+        pg.draw.polygon(self.screen, PLAYER_COLOR, points)
+
+    def draw_ghosts(self, ghosts: List[Ghost]) -> None:
+        """Draw the 4 ghosts, sliding from cell to cell."""
         for ghost in ghosts:
-            draw_x = (
-                ghost.previous_x
-                + (ghost.pos_x - ghost.previous_x) * progress
-            )
+            progress = ghost.progress
+            move_x = ghost.pos_x - ghost.previous_x
+            move_y = ghost.pos_y - ghost.previous_y
+            x, y = self.cell_center(ghost.previous_x + move_x * progress,
+                                    ghost.previous_y + move_y * progress)
+            self.draw_ghost(ghost, x, y)
 
-            draw_y = (
-                ghost.previous_y
-                + (ghost.pos_y - ghost.previous_y) * progress
-            )
+    def draw_ghost(self, ghost: Ghost, x: int, y: int) -> None:
+        """One ghost: a colored circle with a square bottom and two eyes."""
+        r = self.cell_size // 3 + 1
 
-            x, y = self.cell_center(draw_x, draw_y)
+        if ghost.state == EATEN:            # only the eyes, in the corner
+            self.draw_eyes(x, y, r)
+            return
 
-            color = ghost.color
+        if ghost.edible:                    # blue, white when it blinks
+            blink = ghost.flash and pg.time.get_ticks() // 200 % 2 == 0
+            color: Color = FLASH_COLOR if blink else EDIBLE_COLOR
+        else:
+            real = pg.Color(ghost.color)
+            color = (real.r, real.g, real.b)
 
-            # Ghost head
-            pg.draw.circle(
-                self.screen,
-                color,
-                (round(x), round(y)),
-                r,
-            )
+        pg.draw.circle(self.screen, color, (x, y), r)
+        pg.draw.rect(self.screen, color, (x - r, y, 2 * r, r))
+        self.draw_eyes(x, y, r)
 
-            # Ghost body
-            pg.draw.rect(
-                self.screen,
-                color,
-                (round(x - r), round(y), 2 * r, r),
-            )
-
-            # Ghost eyes
-            for dx in (-r // 2, r // 2):
-                pg.draw.circle(
-                    self.screen,
-                    "white",
-                    (round(x + dx), round(y - r // 4)),
-                    max(2, r // 3),
-                )
-
-                pg.draw.circle(
-                    self.screen,
-                    "black",
-                    (round(x + dx), round(y - r // 4)),
-                    max(1, r // 6),
-                )
+    def draw_eyes(self, x: int, y: int, r: int) -> None:
+        """Two white eyes."""
+        for dx in (-r // 2, r // 2):
+            pg.draw.circle(self.screen, "white", (x + dx, y - r // 4),
+                           max(2, r // 3))

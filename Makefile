@@ -1,25 +1,33 @@
-PYTHON = python3
-MAIN = pac-man
-
-.PHONY: install run debug clean lint lint-strict
+# Pac-Man - usage: make <rule>
 
 install:
-	uv sync
+	pip install pygame flake8 mypy pytest pyinstaller
 
 run:
-	uv run python -m $(MAIN) config.json
+	python3 pac-man.py config.json
 
 debug:
-	$(PYTHON) -m pdb $(MAIN)
+	python3 -m pdb pac-man.py config.json
 
 clean:
-	rm -rf .venv __pycache__ .mypy_cache src/__pycache__
+	find . -type d -name "__pycache__" -prune -exec rm -rf {} +
+	rm -rf .mypy_cache .pytest_cache build dist *.spec
 
 lint:
-	uv run flake8 src
-	uv run mypy src
-		--warn-return-any \
-		--warn-unused-ignores \
-		--ignore-missing-imports \
-		--disallow-untyped-defs \
-		--check-untyped-defs
+	flake8 .
+	mypy . --warn-return-any --warn-unused-ignores --ignore-missing-imports \
+		--disallow-untyped-defs --check-untyped-defs
+
+lint-strict:
+	flake8 .
+	mypy . --strict --ignore-missing-imports
+
+test:
+	python3 -m pytest src/tests
+
+# standalone game for Itch.io: dist/pac-man/ (run the file "pac-man")
+package:
+	pyinstaller --noconfirm --onedir --name pac-man --exclude-module numpy pac-man.py
+	cp config.json README.md dist/pac-man/
+
+.PHONY: install run debug clean lint lint-strict test package

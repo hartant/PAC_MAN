@@ -8,6 +8,7 @@ YELLOW = (255, 255, 0)
 WHITE = (255, 255, 255)
 GREY = (150, 150, 150)
 BLACK = (0, 0, 0)
+RED = (255, 80, 80)
 
 # Real pygame keys -> simple names used by the menu logic
 KEY_NAMES: dict[int, str] = {
@@ -27,12 +28,15 @@ INSTRUCTIONS: list[str] = [
     "P or ESC : pause / resume",
     "R : back to the main menu",
     "Q : quit",
+    "C : cheat mode (for the reviewers)",
     "",
     "Rules",
-    "Eat all the pacgums to win the level.",
-    "Super-pacgums make the ghosts edible.",
+    "Eat all the dots to win the level.",
+    "Big dots make the ghosts blue: eat them!",
     "A ghost touches you: you lose a life.",
+    "Time is over: you lose a life.",
     "No lives left: game over.",
+    "Finish all the levels to win the game.",
 ]
 
 
@@ -84,15 +88,18 @@ class MenuScreen:
     """
 
     def __init__(self, screen: pg.Surface,
-                 highscores: list[tuple[str, int]]) -> None:
+                 highscores: list[tuple[str, int]],
+                 message: str = "") -> None:
         """Prepare state. pg.init() must already be called.
 
         Args:
             screen: the pygame window surface.
             highscores: list of (name, score), best first.
+            message: an error to show under the menu (empty = nothing).
         """
         self.screen = screen
         self.highscores = highscores[:10]
+        self.message = message
         self.menu = MainMenu()
         self.current = "menu"
         self.clock = pg.time.Clock()
@@ -101,7 +108,7 @@ class MenuScreen:
     def scale(self) -> float:
         """Return the zoom factor for the current window size."""
         w, h = self.screen.get_size()
-        return max(0.3, min(w, h) / 800)
+        return float(max(0.3, min(w, h) / 800))
 
     def font(self, size: int) -> pg.font.Font:
         """Return a font of `size` design units, scaled to the window."""
@@ -139,6 +146,8 @@ class MenuScreen:
         self.draw_text("Push SPACE to play", 28, 440, GREY)
         self.draw_text("highscores:", 28, 490, WHITE)
         self.draw_scores(525, 26, 28)
+        if self.message:
+            self.draw_text(self.message, 24, 770, RED)
 
     def draw_highscores(self) -> None:
         """Draw the full highscores screen."""
@@ -151,7 +160,7 @@ class MenuScreen:
         self.draw_text("Instructions", 90, 100, YELLOW)
         for i, line in enumerate(INSTRUCTIONS):
             color = YELLOW if line in ("Controls", "Rules") else WHITE
-            self.draw_text(line, 28, 200 + i * 40, color)
+            self.draw_text(line, 28, 190 + i * 38, color)
         self.draw_text("Press any key to go back", 28, 760, GREY)
 
     def handle_event(self, event: pg.event.Event) -> str | None:
