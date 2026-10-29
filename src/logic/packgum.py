@@ -20,6 +20,7 @@ class Pacgum():
         self.supermode_time: int = 10
         self.supermode: bool = False
         self.start: float = 0
+        self.default_cheatmode: bool
         self.activate()
 
     def activate(self) -> None:
@@ -40,6 +41,7 @@ class Pacgum():
                     self.pacgums_state.update({(col, row): True})
 
     def eat_pacgum(self) -> None:
+        # i = 0
         # eat pacgum
         if self.pacgums_state.get((self.player.pos_x, self.player.pos_y)):
             self.pacgums_state.update(
@@ -57,13 +59,14 @@ class Pacgum():
             self.player.update_score(self.super_pacgums_point)
             # activate superpacgum
             self.start = time.monotonic()
+            self.default_cheatmode = self.cheat_mode[0]
             self.cheat_mode[0] = True
             self.supermode = True
 
         elapsed = time.monotonic() - self.start
-        if elapsed >= self.supermode_time:
+        if elapsed >= self.supermode_time and self.supermode:
             self.supermode = False
-            self.cheat_mode[0] = False
+            self.cheat_mode[0] = self.default_cheatmode
 
     def reset(self) -> None:
         # we !!!!!!!!!!!!!!!111

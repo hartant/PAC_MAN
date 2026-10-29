@@ -120,16 +120,100 @@ class Ghost():
             4: 1,
             8: 2
         }
+        self.was_supermode: bool = False
 
-    def move(self, player_row: int, player_col: int, supermode: bool) -> None:  # need to add the flag of super mode
+    # def move(self, player_row: int, player_col: int, supermode: bool) -> None:  # need to add the flag of super mode
+    #     # i: int = 0
+    #     direction = self.find_direction(
+    #         self.pos_y,
+    #         self.pos_x,
+    #         player_row,
+    #         player_col
+    #     )
+
+    #     if direction == 0:
+    #         return
+
+    #     # reverse the direction
+    #     # if supermode and i == 0:
+    #     #     direction = self.opposit.get(direction)
+    #     #     i += 1
+
+    #     if not self.maze.can_move(
+    #         self.pos_y,
+    #         self.pos_x,
+    #         direction
+    #     ):
+    #         return
+    #     self.previous_x = self.pos_x
+    #     self.previous_y = self.pos_y
+
+    #     dr, dc = self.OFFSETS[direction]
+
+    #     self.pos_y += dr
+    #     self.pos_x += dc
+
+    #     self.direction = direction
+
+    def get_frightened_direction(
+        self,
+        player_row: int,
+        player_col: int
+    ) -> int:
+        best_direction = 0
+        best_distance = -1
+
+        for direction, (dr, dc) in self.OFFSETS.items():
+            if not self.maze.can_move(
+                self.pos_y,
+                self.pos_x,
+                direction
+            ):
+                continue
+
+            new_row = self.pos_y + dr
+            new_col = self.pos_x + dc
+
+            distance = (
+                abs(new_row - player_row)
+                + abs(new_col - player_col)
+            )
+
+            if distance > best_distance:
+                best_distance = distance
+                best_direction = direction
+
+        return best_direction
+
+    def move(
+        self,
+        player_row: int,
+        player_col: int,
+        supermode: bool
+    ) -> None:
         direction = self.find_direction(
-            self.pos_y,
-            self.pos_x,
-            player_row,
-            player_col
-        )
-        if supermode: # reverse the direction
-            direction = self.opposit.get(direction, 0)
+                self.pos_y,
+                self.pos_x,
+                player_row,
+                player_col
+            )
+
+        if supermode:
+            reverse = self.opposit.get(direction, 0)
+            if reverse == 0:
+                return
+
+            if self.maze.can_move(
+                self.pos_y,
+                self.pos_x,
+                reverse
+            ):
+                direction = reverse
+            else:
+                direction = self.get_frightened_direction(
+                    player_row,
+                    player_col
+                )
 
         if direction == 0:
             return
@@ -140,6 +224,7 @@ class Ghost():
             direction
         ):
             return
+
         self.previous_x = self.pos_x
         self.previous_y = self.pos_y
 
@@ -155,7 +240,7 @@ class Ghost():
         ghost_row: int,
         ghost_col: int,
         player_row: int,
-        player_col: int,
+        player_col: int
     ) -> int:
         """Return first direction of the shortest path."""
         # this more efficent than return all path for every time
@@ -166,8 +251,11 @@ class Ghost():
         # random crazy !!
         # k = [1, 0, 0, 0]
         # directions = [1, 2, 4, 8]
+
+        # directions.pop(self.direction) for not return from the previeu direction
+
         # if random.choice(k) == 1:
-        #     return random.choice(directions)
+            # return random.choice(directions)
 
         if start == target:
             return 0
