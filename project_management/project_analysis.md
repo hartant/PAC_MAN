@@ -6,7 +6,7 @@
 |---|---|
 | `python3 pac-man.py config.json`, exactly one argument, no traceback | `pac-man.py` |
 | JSON with `#` comments, robust defaults, faulty config handling | `src/ui/config.py` |
-| A-Maze-ing package as is, `perfect=False`, errors handled | `src/logic/maze.py` (`build_maze`) |
+| A-Maze-ing package as is, `perfect=False`, errors handled | `src/logic/maze.py` (`Maze.generate`) |
 | Highscore: top 10, names ≤ 10 (alnum + spaces), scores ≥ 0, load/save, menu | `src/logic/highscore.py`, `src/ui/menu.py` |
 | Level 1 fixed seed, other levels random, ≥ 10 levels, time limit | `GameEngine.load_level` |
 | Pacgums, 4 super-pacgums, 4 ghosts, player in the middle | `packgum.py`, `father.py` |

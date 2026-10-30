@@ -251,12 +251,12 @@ class Ghost:
 
         return (player.pos_y, player.pos_x)             # "chase"
 
-
-def make_ghosts(maze: Maze) -> List[Ghost]:
-    """The 4 ghosts, one in each corner."""
-    styles = [("red", "chase"), ("pink", "ambush"),
-              ("cyan", "random"), ("orange", "shy")]
-    ghosts = []
-    for (row, col), (color, personality) in zip(maze.corners(), styles):
-        ghosts.append(Ghost(col, row, color, maze, personality))
-    return ghosts
+    @staticmethod
+    def create_all(maze: Maze) -> List["Ghost"]:
+        """The 4 ghosts, one in each corner."""
+        styles = [("red", "chase"), ("pink", "ambush"),
+                  ("cyan", "random"), ("orange", "shy")]
+        ghosts = []
+        for (row, col), (color, personality) in zip(maze.corners(), styles):
+            ghosts.append(Ghost(col, row, color, maze, personality))
+        return ghosts

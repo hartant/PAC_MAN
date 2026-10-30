@@ -8,7 +8,7 @@ os.environ.setdefault("SDL_AUDIODRIVER", "dummy")
 from src.logic.core import GameEngine, GHOST_STEP, PLAYER_STEP  # noqa: E402
 from src.logic.father import EATEN, NORMAL  # noqa: E402
 from src.logic.highscore import ScoringSystem  # noqa: E402
-from src.logic.maze import Maze, build_maze  # noqa: E402
+from src.logic.maze import Maze  # noqa: E402
 from src.ui.config import GameConfig  # noqa: E402
 
 
@@ -22,11 +22,11 @@ def make_engine() -> GameEngine:
 
 
 def test_same_seed_same_maze() -> None:
-    assert build_maze(15, 15, 42) == build_maze(15, 15, 42)
+    assert Maze.generate(15, 15, 42) == Maze.generate(15, 15, 42)
 
 
 def test_walls_are_consistent() -> None:
-    maze = Maze(build_maze(15, 15, 42))
+    maze = Maze(Maze.generate(15, 15, 42))
     for row in range(maze.rows):
         for col in range(maze.cols):
             for direction, (d_row, d_col) in Maze.OFFSETS.items():

@@ -10,53 +10,60 @@ import pygame as pg
 from src.logic.core import GameEngine
 from src.logic.highscore import ScoringSystem
 from src.logic.maze import MazeError
-from src.ui.config import load_config
+from src.ui.config import GameConfig
 from src.ui.menu import MenuScreen
 
 WINDOW_SIZE = (1200, 900)
 
 
-def main() -> int:
-    """Run the menu and the games until the player exits."""
-    if len(sys.argv) != 2:
-        print("Usage: python3 pac-man.py config.json")
-        return 1
+class Application:
+    """The whole program: config, window, menu and games."""
 
-    config = load_config(sys.argv[1])
-    scoring = ScoringSystem(config.highscore_filename)
+    def __init__(self, config_path: str) -> None:
+        """Read the config and the highscores (the window comes later)."""
+        self.config: GameConfig = GameConfig.from_file(config_path)
+        self.scoring: ScoringSystem = ScoringSystem(
+            self.config.highscore_filename)
+        self.message: str = ""      # error shown in red in the menu
 
-    pg.init()
-    pg.display.set_mode(WINDOW_SIZE, pg.RESIZABLE)
-    pg.display.set_caption("Pac-Man")
+    def run(self) -> int:
+        """Run the menu and the games until the player exits."""
+        pg.init()
+        pg.display.set_mode(WINDOW_SIZE, pg.RESIZABLE)
+        pg.display.set_caption("Pac-Man")
 
-    message = ""
-    while True:
-        surface = pg.display.get_surface()
-        if surface is None:
-            break
-        menu = MenuScreen(surface, scoring.top(), message)
-        message = ""
-        if menu.run() != "playing":     # "quit": leave the program
-            break
+        while True:
+            surface = pg.display.get_surface()
+            if surface is None:
+                break
+            menu = MenuScreen(surface, self.scoring.top(), self.message)
+            self.message = ""
+            if menu.run() != "playing":     # "quit": leave the program
+                break
+            if not self.play():
+                break
 
+        pg.quit()
+        print("Exiting Pac-Man.")
+        return 0
+
+    def play(self) -> bool:
+        """Play one game. Returns False if the player wants to quit."""
         try:
-            engine = GameEngine(config, scoring, *WINDOW_SIZE)
+            engine = GameEngine(self.config, self.scoring, *WINDOW_SIZE)
         except MazeError as err:        # the maze generator failed
             print(f"Error: {err}")
-            message = "Cannot generate the maze. See the terminal."
-            continue
-
-        if engine.run() == "quit":
-            break
-
-    pg.quit()
-    print("Exiting Pac-Man.")
-    return 0
+            self.message = "Cannot generate the maze. See the terminal."
+            return True
+        return engine.run() != "quit"
 
 
 if __name__ == "__main__":
+    if len(sys.argv) != 2:
+        print("Usage: python3 pac-man.py config.json")
+        sys.exit(1)
     try:
-        sys.exit(main())
+        sys.exit(Application(sys.argv[1]).run())
     except KeyboardInterrupt:
         pg.quit()
         print("\nExiting Pac-Man.")

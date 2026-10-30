@@ -3,7 +3,7 @@
 import os
 import tempfile
 
-from src.ui.config import GameConfig, load_config
+from src.ui.config import GameConfig
 
 
 def read(text: str) -> GameConfig:
@@ -11,7 +11,7 @@ def read(text: str) -> GameConfig:
     path = os.path.join(tempfile.mkdtemp(), "config.json")
     with open(path, "w", encoding="utf-8") as file:
         file.write(text)
-    return load_config(path)
+    return GameConfig.from_file(path)
 
 
 def test_comments_are_ignored() -> None:
@@ -43,7 +43,8 @@ def test_broken_files_give_all_defaults() -> None:
 
 
 def test_missing_file_gives_defaults() -> None:
-    assert load_config("this_file_does_not_exist.json") == GameConfig()
+    config = GameConfig.from_file("this_file_does_not_exist.json")
+    assert config == GameConfig()
 
 
 def test_unknown_keys_are_ignored() -> None:
@@ -68,6 +69,6 @@ def test_cheat_mode_must_be_a_boolean() -> None:
 
 
 def test_real_config_file_is_valid() -> None:
-    config = load_config("config.json")
+    config = GameConfig.from_file("config.json")
     assert config.lives == 3
     assert len(config.levels) >= 10

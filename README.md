@@ -144,7 +144,7 @@ dependency, and it is enough for 10 lines.
 
 The maze comes from the assigned **A-Maze-ing** package (`mazegenerator/`,
 used as it is, never modified). Our loader adapts to its interface:
-`src/logic/maze.py → build_maze(width, height, seed)` calls
+`src/logic/maze.py → Maze.generate(width, height, seed)` calls
 
 ```python
 MazeGenerator(size=(width, height), perfect=False, seed=seed).maze
@@ -199,10 +199,10 @@ maze, ghosts, dots, collisions, timer, game over and victory.
 ## General Software Architecture
 
 ```
-pac-man.py                 entry point: config → menu → game → menu ...
+pac-man.py                 Application (entry point): config → menu → game → menu ...
 │
 ├── src/ui/                what the player sees
-│   ├── config.py          GameConfig, LevelConfig, load_config  (parser)
+│   ├── config.py          GameConfig (from_file), LevelConfig, ConfigParser
 │   ├── menu.py            MainMenu (logic) + MenuScreen (drawing, loop)
 │   ├── graphics.py        Renderer: maze, dots, Pac-Man, ghosts
 │   ├── hud.py             Hud: score / lives / level / time, banners
@@ -213,8 +213,8 @@ pac-man.py                 entry point: config → menu → game → menu ...
 │
 ├── src/logic/             the rules of the game (no drawing)
 │   ├── core.py            GameEngine: loop, levels, timer, collisions, cheat
-│   ├── maze.py            Maze (walls, BFS) + build_maze (A-Maze-ing loader)
-│   ├── father.py          Player, Ghost, make_ghosts
+│   ├── maze.py            Maze (walls, BFS, Maze.generate = A-Maze-ing loader)
+│   ├── father.py          Player, Ghost (Ghost.create_all)
 │   ├── packgum.py         Pacgum: dots and super mode
 │   └── highscore.py       ScoringSystem: top 10 file
 │
@@ -225,7 +225,7 @@ pac-man.py                 entry point: config → menu → game → menu ...
 Relations: `pac-man.py` creates `GameConfig` and `ScoringSystem`, shows
 `MenuScreen`, then creates a `GameEngine(config, scoring)`. The engine owns
 the `Maze`, the `Player`, 4 `Ghost`, the `Pacgum` (dots), a `Renderer`, the
-`Hud` and the `PauseMenu`. Each level builds a new maze with `build_maze`.
+`Hud` and the `PauseMenu`. Each level builds a new maze with `Maze.generate`.
 The logic never imports `pygame` drawing code and the drawing code never
 changes the game.
 

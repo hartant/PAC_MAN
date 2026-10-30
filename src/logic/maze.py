@@ -129,26 +129,27 @@ class Maze:
             col += d_col
         return (row, col)
 
+    @staticmethod
+    def generate(width: int, height: int,
+                 seed: Optional[int] = None) -> List[List[int]]:
+        """Ask the A-Maze-ing package for a maze (it is used as it is).
 
-def build_maze(width: int, height: int,
-               seed: Optional[int] = None) -> List[List[int]]:
-    """Ask the A-Maze-ing package for a maze (it is used as it is).
+        Args:
+            width: number of columns.
+            height: number of rows.
+            seed: a seed > 0 always gives the same maze.
+                None gives a random one.
 
-    Args:
-        width: number of columns.
-        height: number of rows.
-        seed: a seed > 0 always gives the same maze. None gives a random one.
+        Returns:
+            The matrix of the maze (list of rows of numbers 0 to 15).
 
-    Returns:
-        The matrix of the maze (list of rows of numbers 0 to 15).
-
-    Raises:
-        MazeError: if the generator fails.
-    """
-    try:
-        generator = MazeGenerator(size=(width, height), perfect=False,
-                                  seed=seed or 0)
-        return [list(row) for row in generator.maze]
-    except Exception as err:        # the package is not ours: catch all
-        raise MazeError(f"Cannot generate a {width}x{height} maze: "
-                        f"{type(err).__name__}: {err}") from err
+        Raises:
+            MazeError: if the generator fails.
+        """
+        try:
+            generator = MazeGenerator(size=(width, height), perfect=False,
+                                      seed=seed or 0)
+            return [list(row) for row in generator.maze]
+        except Exception as err:        # the package is not ours: catch all
+            raise MazeError(f"Cannot generate a {width}x{height} maze: "
+                            f"{type(err).__name__}: {err}") from err

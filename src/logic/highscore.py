@@ -16,23 +16,23 @@ MAX_NAME_LENGTH = 10
 TOP_SIZE = 10
 
 
-def clean_name(name: object) -> str:
-    """Return a safe name: ASCII letters, digits, spaces, 10 chars max."""
-    if not isinstance(name, str):
-        return ""
-    kept = "".join(ch for ch in name
-                   if ch.isascii() and (ch.isalnum() or ch == " "))
-    return kept.strip()[:MAX_NAME_LENGTH].strip()
-
-
-def is_valid_score(score: object) -> bool:
-    """A score is a whole number, not negative (True/False are refused)."""
-    return (isinstance(score, int) and not isinstance(score, bool)
-            and score >= 0)
-
-
 class ScoringSystem:
     """Load, keep and save the top 10 scores."""
+
+    @staticmethod
+    def clean_name(name: object) -> str:
+        """Return a safe name: ASCII letters, digits, spaces, 10 chars max."""
+        if not isinstance(name, str):
+            return ""
+        kept = "".join(ch for ch in name
+                       if ch.isascii() and (ch.isalnum() or ch == " "))
+        return kept.strip()[:MAX_NAME_LENGTH].strip()
+
+    @staticmethod
+    def is_valid_score(score: object) -> bool:
+        """A score is a whole number, not negative (True/False are refused)."""
+        return (isinstance(score, int) and not isinstance(score, bool)
+                and score >= 0)
 
     def __init__(self, filename: str = "highscores.json") -> None:
         """Create the system and load the file right now."""
@@ -61,9 +61,9 @@ class ScoringSystem:
         for item in data:
             if not isinstance(item, dict):
                 continue
-            name = clean_name(item.get("name"))
+            name = self.clean_name(item.get("name"))
             score = item.get("score")
-            if name and isinstance(score, int) and is_valid_score(score):
+            if name and isinstance(score, int) and self.is_valid_score(score):
                 self.scores.append((name, score))
             else:
                 logging.warning("Highscores: bad entry ignored: %r", item)
@@ -76,8 +76,8 @@ class ScoringSystem:
         Returns:
             True if the score entered the top 10.
         """
-        name = clean_name(name)
-        if not name or not is_valid_score(score):
+        name = self.clean_name(name)
+        if not name or not self.is_valid_score(score):
             logging.warning("Highscores: invalid score ignored (%r, %r).",
                             name, score)
             return False

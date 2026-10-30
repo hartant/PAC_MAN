@@ -3,7 +3,7 @@
 | Risk | Impact | Probability | What we did |
 |---|---|---|---|
 | Bad config file crashes the game | High (a crash = not functional) | Medium | Every key checked, defaults, warnings, tests (`test_config.py`) |
-| The maze generator fails (it is not ours) | High | Low | `build_maze` catches errors, checks the maze, retries, `MazeError` shown in the menu; recursion limit raised for big mazes |
+| The maze generator fails (it is not ours) | High | Low | `Maze.generate` catches errors, checks the maze, retries, `MazeError` shown in the menu; recursion limit raised for big mazes |
 | Highscore file missing / corrupted / read-only | Medium | Medium | Every case handled, file written safely, tests (`test_highscore.py`) |
 | Ghosts walk on the same cell (unfair / ugly) | Medium | Happened | Different target per ghost, no U-turn, staggered start |
 | Level too long for the time limit | Medium | Happened | Measured the clear time per maze size, limited default sizes to 15–19 |

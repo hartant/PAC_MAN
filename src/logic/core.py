@@ -10,9 +10,9 @@ from typing import List, Optional, Tuple
 
 import pygame as pg
 
-from src.logic.father import EATEN, Ghost, Player, make_ghosts
+from src.logic.father import EATEN, Ghost, Player
 from src.logic.highscore import ScoringSystem
-from src.logic.maze import Maze, build_maze
+from src.logic.maze import Maze
 from src.logic.packgum import SUPER, Pacgum
 from src.ui.config import GameConfig
 from src.ui.end_screen import EndScreen
@@ -114,12 +114,12 @@ class GameEngine():
         """
         level = self.config.levels[self.level_index]
         seed = self.config.seed if self.level_index == 0 else None
-        self.matrix = build_maze(level.width, level.height, seed)
+        self.matrix = Maze.generate(level.width, level.height, seed)
         self.maze = Maze(self.matrix)
 
         row, col = self.maze.start_cell()
         self.player.new_level(col, row)
-        self.ghosts = make_ghosts(self.maze)
+        self.ghosts = Ghost.create_all(self.maze)
         self.packgum = Pacgum(self.maze, self.player,
                               self.config.points_per_pacgum,
                               self.config.points_per_super_pacgum,

@@ -4,7 +4,7 @@ import json
 import os
 import tempfile
 
-from src.logic.highscore import ScoringSystem, clean_name
+from src.logic.highscore import ScoringSystem
 
 
 def new_path() -> str:
@@ -12,12 +12,12 @@ def new_path() -> str:
 
 
 def test_names_are_cleaned() -> None:
-    assert clean_name("  Ann  ") == "Ann"
-    assert clean_name("A!n@n#") == "Ann"
-    assert clean_name("abcdefghijklmnop") == "abcdefghij"
-    assert clean_name("Zoë") == "Zo"
-    assert clean_name("   ") == ""
-    assert clean_name(42) == ""
+    assert ScoringSystem.clean_name("  Ann  ") == "Ann"
+    assert ScoringSystem.clean_name("A!n@n#") == "Ann"
+    assert ScoringSystem.clean_name("abcdefghijklmnop") == "abcdefghij"
+    assert ScoringSystem.clean_name("Zoë") == "Zo"
+    assert ScoringSystem.clean_name("   ") == ""
+    assert ScoringSystem.clean_name(42) == ""
 
 
 def test_scores_are_sorted_and_saved() -> None:
