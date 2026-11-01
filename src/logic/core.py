@@ -122,6 +122,7 @@ class GameEngine():
         self.ghosts = Ghost.create_all(self.maze)
         self.packgum = Pacgum(self.maze, self.player,
                               self.config.points_per_pacgum,
+                              self.config.pacgum,
                               self.config.points_per_super_pacgum,
                               SUPERMODE_TIME)
 

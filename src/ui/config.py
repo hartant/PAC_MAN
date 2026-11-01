@@ -143,7 +143,14 @@ class GameConfig:
             with open(filepath, "r", encoding="utf-8") as f:
                 lines = f.readlines()
             # Drop comment lines (a '#' after some spaces counts too).
-            clean = [ln for ln in lines if not ln.strip().startswith("#")]
+            clean = [
+                ln for ln in lines
+                if not (
+                    ln.strip().startswith("#") or
+                    ln.startswith("//") or
+                    ln.startswith("/*")
+                )
+            ]
             data = json.loads("".join(clean))
         except FileNotFoundError:
             logging.error("Config file '%s' not found. Using default "

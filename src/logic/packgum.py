@@ -22,6 +22,7 @@ class Pacgum:
                  maze: Maze,
                  player: Player,
                  pacgums_point: int = 10,
+                 pacgums: int = 42,
                  super_pacgums_point: int = 50,
                  supermode_time: float = 8.0) -> None:
         """Put the dots in the maze.
@@ -36,6 +37,7 @@ class Pacgum:
         self.maze: Maze = maze
         self.player: Player = player
         self.pacgums_point: int = pacgums_point
+        self.pacgums: int = pacgums
         self.super_pacgums_point: int = super_pacgums_point
         self.supermode_time: float = supermode_time
 
@@ -58,16 +60,20 @@ class Pacgum:
         Not in the "42" cells, not in the corners (big dots there) and not
         in the cell where the player starts.
         """
+        i: int = 0
         corners = {(col, row) for row, col in self.maze.corners()}
         start = (self.player.spawn_x, self.player.spawn_y)
         self.pacgums_state = {}
         for row in range(self.maze.rows):
             for col in range(self.maze.cols):
+                if i > self.pacgums:
+                    break
                 if self.maze.is_closed(row, col):
                     continue
                 if (col, row) in corners or (col, row) == start:
                     continue
                 self.pacgums_state[(col, row)] = True
+                i += 1
 
     def super_pacgum_state(self) -> None:
         """Put a big dot in each corner."""
