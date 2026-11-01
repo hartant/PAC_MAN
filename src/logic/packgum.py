@@ -66,7 +66,7 @@ class Pacgum:
         self.pacgums_state = {}
         for row in range(self.maze.rows):
             for col in range(self.maze.cols):
-                if i > self.pacgums:
+                if i >= self.pacgums:
                     break
                 if self.maze.is_closed(row, col):
                     continue
