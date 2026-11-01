@@ -1,0 +1,6 @@
+uv.lock/
+highscores.json/
+.env/
+.venv/
+__pycache__/
+mazegenerator-00001-py3-none-any.whl/
