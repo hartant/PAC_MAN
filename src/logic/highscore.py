@@ -10,6 +10,8 @@ write...) is logged and the game goes on: it never crashes.
 
 import json
 import logging
+import os
+import tempfile
 from typing import Any, List, Tuple
 
 MAX_NAME_LENGTH = 10
@@ -93,12 +95,27 @@ class ScoringSystem:
         return list(self.scores)
 
     def save(self) -> None:
-        """Write the file. A problem is only a warning."""
+        """Write the file. A problem is only a warning.
+
+        The list is written in a temporary file first, then renamed: a crash
+        in the middle can never leave a half-written highscore file.
+        """
         data = [{"name": name, "score": score}
                 for name, score in self.scores]
+        folder = os.path.dirname(os.path.abspath(self.filename))
+        tmp_path = ""
         try:
-            with open(self.filename, "w", encoding="utf-8") as file:
+            with tempfile.NamedTemporaryFile("w", encoding="utf-8",
+                                             dir=folder, suffix=".tmp",
+                                             delete=False) as file:
+                tmp_path = file.name
                 json.dump(data, file, indent=2)
+            os.replace(tmp_path, self.filename)
         except OSError as err:
             logging.warning("Highscores: cannot save '%s' (%s).",
                             self.filename, err)
+            if tmp_path:
+                try:
+                    os.remove(tmp_path)
+                except OSError:
+                    pass

@@ -1,4 +1,4 @@
-*This project has been created as part of the 42 curriculum by <login1>, <login2>.*
+*This project has been created as part of the 42 curriculum by <mbenamar>, <ahbarbou>.*
 
 # Pac-Man — Ghosts! More ghosts!
 
@@ -33,8 +33,12 @@ Features:
 
 ### Install
 
+The assigned A-Maze-ing package is the wheel file `mazegenerator-*.whl` at
+the root of the repository. `make install` installs it with pip (as it is,
+never modified), together with the other dependencies:
+
 ```bash
-make install        # pip install pygame flake8 mypy pytest pyinstaller
+make install        # pygame flake8 mypy pytest pyinstaller + the maze wheel
 ```
 
 ### Run
@@ -44,7 +48,8 @@ make run            # = python3 pac-man.py config.json
 python3 pac-man.py my_config.json      # any JSON file with the same format
 ```
 
-The program takes **exactly one argument**: the configuration file. A missing
+The program takes **exactly one argument**: the configuration file (the
+packaged game started with a double click uses the `config.json` next to it). A missing
 file, a wrong value or a missing key never gives a traceback: a clear message
 is printed and safe defaults are used.
 
@@ -59,7 +64,7 @@ is printed and safe defaults are used.
 | `make lint` | `flake8 .` and `mypy .` with the flags of the subject |
 | `make lint-strict` | `flake8 .` and `mypy . --strict` |
 | `make test` | Run all the tests (`pytest src/tests`) |
-| `make package` | Build the standalone game with PyInstaller (`dist/pac-man/`) |
+| `make package` | Build the standalone game from `pac-man.spec` (`dist/pac-man/`) |
 
 ### Controls
 
@@ -88,20 +93,22 @@ The cheat mode can also be started from the config file (`"cheat_mode": true`).
 ## Configuration
 
 `config.json` is a JSON file where **lines starting with `#` are comments**
-(they are removed before the JSON is read). Every key is optional.
+(they are removed before the JSON is read). C comments `/* ... */` (on one
+or more lines) and C++ comments `// ...` are accepted too; comment marks
+inside a "string" are kept. Every key is optional.
 
 | Key | Default | Allowed values | Meaning |
 |---|---|---|---|
 | `highscore_filename` | `"highscores.json"` | non-empty text | File of the top 10 |
 | `lives` | `3` | whole number 1–99 | Lives at the start of the game |
-| `pacgum` | `42` | whole number 1–10000 | Read and checked, but not used: dots are put in all the free corridor cells |
+| `pacgum` | `1000` | whole number 1–10000 | Maximum number of small dots per level. If the maze has more free cells, the dots are spread at regular steps over the whole maze; with a big value every corridor cell gets a dot |
 | `points_per_pacgum` | `10` | whole number 0–100000 | Points for a pacgum (X) |
 | `points_per_super_pacgum` | `50` | whole number 0–100000 | Points for a super-pacgum (Y) |
 | `points_per_ghost` | `200` | whole number 0–100000 | Points for an edible ghost (Z) |
-| `seed` | `42` | whole number | Seed of the maze of level 1 (> 0 = always the same maze) |
+| `seed` | `42` | whole number ≥ 1 | Seed of the maze of level 1 (always the same maze). 0 or less is refused (it would make level 1 random) |
 | `level_max_time` | `90` | whole number 10–3600 | Seconds for each level |
 | `cheat_mode` | `false` | `true` / `false` | Start with the cheat mode on |
-| `levels` | 10 levels (15x15 → 19x19) | list of `{"width": 5–40, "height": 5–40}` | One item per level. The game is won after the last one |
+| `levels` | 10 levels (15x15 → 19x19) | list of `{"width": 5–30, "height": 5–30}` | One item per level. The game is won after the last one |
 
 Faulty config handling (never a traceback, the game always starts):
 
@@ -142,9 +149,12 @@ dependency, and it is enough for 10 lines.
 
 ## Maze generation
 
-The maze comes from the assigned **A-Maze-ing** package (`mazegenerator/`,
-used as it is, never modified). Our loader adapts to its interface:
-`src/logic/maze.py → Maze.generate(width, height, seed)` calls
+The maze comes from the assigned **A-Maze-ing** package: the wheel
+`mazegenerator-*.whl` given at the start of the project, installed with
+`make install` and used as it is (never modified, never copied in our code).
+Our loader adapts to its interface:
+`src/logic/maze.py → Maze.generate(width, height, seed)` loads the
+`MazeGenerator` class of the package (`Maze.load_generator`) and calls
 
 ```python
 MazeGenerator(size=(width, height), perfect=False, seed=seed).maze
@@ -156,7 +166,8 @@ MazeGenerator(size=(width, height), perfect=False, seed=seed).maze
 - The result is checked (right size, values 0–15, all the free cells are
   linked). If the generator raises an error or gives an unusable maze, we try
   again (random seed, 5 tries) then `MazeError` is raised: the menu shows a
-  message and no traceback. The package builds the maze with a recursive
+  message and no traceback. If the package is not installed, the same clean
+  `MazeError` is shown ("run: make install"). The package builds the maze with a recursive
   function, so the recursion limit is raised during the call (big mazes).
 - Each cell is a number 0–15 (one bit per wall: top 1, right 2, bottom 4,
   left 8). A cell worth 15 is part of the "42" drawing in the middle.
@@ -193,8 +204,9 @@ MazeGenerator(size=(width, height), perfect=False, seed=seed).maze
 
 ### Tests
 
-`make test` (or `pytest src/tests`) runs 30 tests: config reader, highscores,
-maze, ghosts, dots, collisions, timer, game over and victory.
+`make test` (or `pytest src/tests`) runs 14 tests: config reader and
+comments, faulty values, maze generation and walls, dots spread, super
+pacgum, highscores (top 10, names, broken file).
 
 ## General Software Architecture
 
@@ -214,13 +226,18 @@ pac-man.py                 Application (entry point): config → menu → game �
 ├── src/logic/             the rules of the game (no drawing)
 │   ├── core.py            GameEngine: loop, levels, timer, collisions, cheat
 │   ├── maze.py            Maze (walls, BFS, Maze.generate = A-Maze-ing loader)
-│   ├── father.py          Player, Ghost (Ghost.create_all)
+│   ├── father.py          Character (base: walls rule) → Player, Ghost
 │   ├── packgum.py         Pacgum: dots and super mode
 │   └── highscore.py       ScoringSystem: top 10 file
 │
-├── mazegenerator/         A-Maze-ing package of another group (not modified)
-└── src/tests/             tests
+├── src/tests/             tests (pytest)
+├── pac-man.spec           PyInstaller packaging script (Itch.io build)
+└── mazegenerator-*.whl    A-Maze-ing package of another group (installed, not modified)
 ```
+
+Inheritance: `Player` and `Ghost` both inherit from `Character`, which owns
+the position, the start cell, the step timer and the rule "never walk
+through a wall" (`Character.can_go` / `Character.move`).
 
 Relations: `pac-man.py` creates `GameConfig` and `ScoringSystem`, shows
 `MenuScreen`, then creates a `GameEngine(config, scoring)`. The engine owns
@@ -236,9 +253,14 @@ in [`project_management/`](project_management/README.md).
 
 ## Packaging
 
-`make package` runs PyInstaller: it builds the folder `dist/pac-man/` with the
+`make package` runs PyInstaller with `pac-man.spec` (the packaging script,
+at the root of the repository): it builds the folder `dist/pac-man/` with the
 game inside (no Python needed), and copies `config.json` and `README.md` in
-it. This folder, zipped, is the free build uploaded on Itch.io.
+it. Double-click `pac-man` to play: without an argument the packaged game
+reads the `config.json` next to it and saves `highscores.json` there. This
+folder, zipped, is the free (unlisted) build uploaded on Itch.io:
+
+**Itch.io page:** <PUT THE ITCH.IO LINK HERE>
 
 ## Resources
 
@@ -265,5 +287,5 @@ tested everything and each of us can explain the code of the project:
   between games...) and proposing the final logic: levels, timer, ghost
   behaviours, highscore file, cheat mode;
 - writing the tests, the Makefile, the packaging script and drafts of the
-  documents. The 30 tests and the lint (`flake8`, `mypy`) are our proof that
+  documents. The tests and the lint (`flake8`, `mypy`) are our proof that
   it works.

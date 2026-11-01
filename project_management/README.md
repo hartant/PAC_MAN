@@ -1,8 +1,7 @@
 # Project management
 
-Everything that proves how the project was driven. **These documents are a
-draft written from the Git history: both team members must read them and
-correct what is not exactly true** (names, dates, decisions).
+Everything that proves how the project was driven: plan and real progress,
+roles, choices, risks, tests and the problems we met.
 
 | File | Content |
 |---|---|

@@ -5,10 +5,13 @@ TOP = 1, RIGHT = 2, BUTTOM = 4, LEFT = 8. A cell worth 15 is closed on the
 four sides: it is a part of the "42" drawing in the middle of the maze.
 """
 
+import importlib
+import random
+import sys
 from collections import deque
-from typing import Deque, Dict, List, Optional, Tuple
+from typing import Any, Deque, Dict, List, Optional, Tuple
 
-from mazegenerator import MazeGenerator
+GENERATE_TRIES = 5
 
 Cell = Tuple[int, int]          # (row, col)
 
@@ -130,6 +133,20 @@ class Maze:
         return (row, col)
 
     @staticmethod
+    def load_generator() -> Any:
+        """Return the MazeGenerator class of the A-Maze-ing package.
+
+        Raises:
+            MazeError: if the package is not installed (no traceback).
+        """
+        try:
+            package = importlib.import_module("mazegenerator")
+            return getattr(package, "MazeGenerator")
+        except (ImportError, AttributeError) as err:
+            raise MazeError("the 'mazegenerator' package is not installed "
+                            f"(run: make install) - {err}") from err
+
+    @staticmethod
     def generate(width: int, height: int,
                  seed: Optional[int] = None) -> List[List[int]]:
         """Ask the A-Maze-ing package for a maze (it is used as it is).
@@ -144,12 +161,46 @@ class Maze:
             The matrix of the maze (list of rows of numbers 0 to 15).
 
         Raises:
-            MazeError: if the generator fails.
+            MazeError: if the package is missing or fails 5 times.
         """
+        maze_generator = Maze.load_generator()
+        last_error = "unusable maze"
+        # the package builds the maze with a recursive function
+        old_limit = sys.getrecursionlimit()
+        sys.setrecursionlimit(max(old_limit, width * height * 4 + 1000))
         try:
-            generator = MazeGenerator(size=(width, height), perfect=False,
-                                      seed=seed or 0)
-            return [list(row) for row in generator.maze]
-        except Exception as err:        # the package is not ours: catch all
-            raise MazeError(f"Cannot generate a {width}x{height} maze: "
-                            f"{type(err).__name__}: {err}") from err
+            for attempt in range(GENERATE_TRIES):
+                try_seed = seed or 0
+                if attempt > 0:         # the asked seed failed: random one
+                    try_seed = random.randint(1, 2**31 - 1)
+                try:
+                    generator = maze_generator(size=(width, height),
+                                               perfect=False, seed=try_seed)
+                    matrix = [list(row) for row in generator.maze]
+                except Exception as err:    # not our package: catch all
+                    last_error = f"{type(err).__name__}: {err}"
+                    continue
+                if Maze.is_usable(matrix, width, height):
+                    return matrix
+        finally:
+            sys.setrecursionlimit(old_limit)
+        raise MazeError(f"Cannot generate a {width}x{height} maze "
+                        f"({last_error})")
+
+    @staticmethod
+    def is_usable(matrix: Any, width: int, height: int) -> bool:
+        """Check the result of the package: size, values, all cells linked."""
+        if not isinstance(matrix, list) or len(matrix) != height:
+            return False
+        for row in matrix:
+            if not isinstance(row, list) or len(row) != width:
+                return False
+            for value in row:
+                if not isinstance(value, int) or not 0 <= value <= 15:
+                    return False
+        maze = Maze(matrix)
+        free = maze.free_cells()
+        if not free:
+            return False
+        reachable = maze.distances(*maze.start_cell())
+        return len(reachable) == len(free)

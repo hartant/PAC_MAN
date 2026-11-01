@@ -3,7 +3,7 @@
 A dot is stored as {(column, row): True}. True = still there, False = eaten.
 """
 
-from typing import Dict, Tuple
+from typing import Dict, List, Tuple
 
 from src.logic.father import Player
 from src.logic.maze import Maze
@@ -55,25 +55,29 @@ class Pacgum:
         self.supermode_left = 0.0
 
     def pacgum_state(self) -> None:
-        """Put a small dot in every corridor.
+        """Put the small dots in the corridors, spread over the whole maze.
 
         Not in the "42" cells, not in the corners (big dots there) and not
-        in the cell where the player starts.
+        in the cell where the player starts. `pacgums` (config key
+        "pacgum") is the maximum number of dots: if the maze has more free
+        cells, the dots are taken at regular steps so they cover the whole
+        maze, not only its top rows.
         """
-        i: int = 0
         corners = {(col, row) for row, col in self.maze.corners()}
         start = (self.player.spawn_x, self.player.spawn_y)
-        self.pacgums_state = {}
-        for row in range(self.maze.rows):
-            for col in range(self.maze.cols):
-                if i >= self.pacgums:
-                    break
-                if self.maze.is_closed(row, col):
-                    continue
-                if (col, row) in corners or (col, row) == start:
-                    continue
-                self.pacgums_state[(col, row)] = True
-                i += 1
+        free: List[Position] = [
+            (col, row)
+            for row, col in self.maze.free_cells()
+            if (col, row) not in corners and (col, row) != start
+        ]
+        count = min(self.pacgums, len(free))
+        chosen: List[Position] = []
+        if count == len(free):
+            chosen = free
+        elif count > 0:
+            step = len(free) / count
+            chosen = [free[int(i * step)] for i in range(count)]
+        self.pacgums_state = {cell: True for cell in chosen}
 
     def super_pacgum_state(self) -> None:
         """Put a big dot in each corner."""

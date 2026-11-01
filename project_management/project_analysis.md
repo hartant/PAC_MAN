@@ -20,7 +20,7 @@
 
 - **pygame**: simple, well documented, enough for a 2D game.
 - **Logic / drawing split**: `src/logic` has the rules, `src/ui` the drawing.
-  Easier to test (30 tests without a real window) and to explain.
+  Easier to test (tests without a real window) and to explain.
 - **Time based updates (`dt`)**: same speed on every computer; pause = do not
   call `update`.
 - **Cell by cell movement + sliding animation**: simple rules (positions are

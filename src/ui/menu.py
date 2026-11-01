@@ -143,7 +143,8 @@ class MenuScreen:
                                210 + i * 50, YELLOW)
             else:
                 self.draw_text(item.label, 44, 210 + i * 50, WHITE)
-        self.draw_text("Push SPACE to play", 28, 440, GREY)
+        self.draw_text("UP/DOWN to choose, ENTER or SPACE to select",
+                       28, 440, GREY)
         self.draw_text("highscores:", 28, 490, WHITE)
         self.draw_scores(525, 26, 28)
         if self.message:

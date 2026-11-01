@@ -15,27 +15,64 @@ EDIBLE = "edible"       # blue, runs away, can be eaten
 EATEN = "eaten"         # waits in its corner before coming back
 
 
-class Player:
-    """Pac-Man: goes straight, and turns when the player asked for it."""
+class Character:
+    """What Pac-Man and the ghosts share: a cell, a start cell, a timer.
 
-    def __init__(self, pos_x: int, pos_y: int, lives: int = 3) -> None:
-        """Put the player in a cell (pos_x = column, pos_y = row)."""
+    The rule "never walk through a wall" is written once here, in
+    `can_go` / `move`, and both the Player and the Ghost inherit it.
+    """
+
+    def __init__(self, pos_x: int, pos_y: int,
+                 step_time: float = 0.2) -> None:
+        """Put the character in a cell (pos_x = column, pos_y = row)."""
         self.spawn_x: int = pos_x
         self.spawn_y: int = pos_y
         self.pos_x: int = pos_x
         self.pos_y: int = pos_y
         self.previous_x: int = pos_x
         self.previous_y: int = pos_y
+        self.direction: int = 0
+        self.timer: float = 0.0
+        self.step_time: float = step_time
 
-        self.direction: int = 0         # direction we are really going
+    def can_go(self, maze: Maze, direction: int) -> bool:
+        """True if there is no wall in this direction."""
+        return bool(direction) and maze.can_move(self.pos_y, self.pos_x,
+                                                 direction)
+
+    def move(self, maze: Maze, direction: int) -> bool:
+        """Go one cell in this direction. Refused if a wall is there."""
+        if not self.can_go(maze, direction):
+            return False
+        d_row, d_col = Maze.OFFSETS[direction]
+        self.pos_y += d_row
+        self.pos_x += d_col
+        self.direction = direction
+        return True
+
+    def remember_cell(self) -> None:
+        """Keep the cell we leave (the screen slides from it)."""
+        self.previous_x = self.pos_x
+        self.previous_y = self.pos_y
+
+    def reset_position(self) -> None:
+        """Back to the start cell."""
+        self.pos_x = self.previous_x = self.spawn_x
+        self.pos_y = self.previous_y = self.spawn_y
+        self.direction = 0
+        self.timer = 0.0
+
+
+class Player(Character):
+    """Pac-Man: goes straight, and turns when the player asked for it."""
+
+    def __init__(self, pos_x: int, pos_y: int, lives: int = 3) -> None:
+        """Put the player in a cell (pos_x = column, pos_y = row)."""
+        super().__init__(pos_x, pos_y, step_time=0.12)
         self.next_direction: int = 0    # direction asked with the keyboard
         self.moving: bool = False
-
         self.lives: int = lives
         self.score: int = 0
-
-        self.timer: float = 0.0
-        self.step_time: float = 0.12
 
     @property
     def progress(self) -> float:
@@ -61,25 +98,17 @@ class Player:
 
     def step(self, maze: Maze) -> bool:
         """Go to the next cell: the asked direction first, else straight."""
-        self.previous_x = self.pos_x
-        self.previous_y = self.pos_y
+        self.remember_cell()
         for direction in (self.next_direction, self.direction):
-            if direction and maze.can_move(self.pos_y, self.pos_x, direction):
-                d_row, d_col = Maze.OFFSETS[direction]
-                self.pos_y += d_row
-                self.pos_x += d_col
-                self.direction = direction
+            if self.move(maze, direction):
                 return True
         return False
 
     def reset_position(self) -> None:
         """Back to the start cell (after a lost life or a new level)."""
-        self.pos_x = self.previous_x = self.spawn_x
-        self.pos_y = self.previous_y = self.spawn_y
-        self.direction = 0
+        super().reset_position()
         self.next_direction = 0
         self.moving = False
-        self.timer = 0.0
 
     def new_level(self, pos_x: int, pos_y: int) -> None:
         """Change the start cell for a new maze. Score and lives stay."""
@@ -93,7 +122,7 @@ class Player:
             self.score += value
 
 
-class Ghost:
+class Ghost(Character):
     """A ghost. Each ghost has its own way to chase the player.
 
     - "chase" (red): goes straight to the player.
@@ -116,23 +145,15 @@ class Ghost:
             maze: the maze of the level.
             personality: "chase", "ambush", "random" or "shy".
         """
-        self.spawn_x: int = pos_x
-        self.spawn_y: int = pos_y
-        self.pos_x: int = pos_x
-        self.pos_y: int = pos_y
-        self.previous_x: int = pos_x
-        self.previous_y: int = pos_y
+        super().__init__(pos_x, pos_y, step_time=0.2)
         self.color: str = color
         self.maze: Maze = maze
         self.personality: str = personality
         self.rng: random.Random = random.Random()
 
-        self.direction: int = 0
         self.state: str = NORMAL
         self.flash: bool = False        # blinks at the end of the power
         self.respawn_left: float = 0.0
-        self.timer: float = 0.0
-        self.step_time: float = 0.2
 
         self.random_target: Cell = (pos_y, pos_x)   # for "random"
         self.steps_left: int = 0
@@ -151,13 +172,10 @@ class Ghost:
 
     def reset(self) -> None:
         """Back to the corner, normal."""
-        self.pos_x = self.previous_x = self.spawn_x
-        self.pos_y = self.previous_y = self.spawn_y
-        self.direction = 0
+        self.reset_position()
         self.state = NORMAL
         self.flash = False
         self.respawn_left = 0.0
-        self.timer = 0.0
 
     def set_edible(self, value: bool) -> None:
         """Start or stop the edible mode (an eaten ghost is not changed)."""
@@ -188,15 +206,8 @@ class Ghost:
 
     def step(self, player: Player) -> None:
         """Choose a direction and go to the next cell."""
-        self.previous_x = self.pos_x
-        self.previous_y = self.pos_y
-        direction = self.choose_direction(player)
-        if direction == 0:
-            return
-        d_row, d_col = Maze.OFFSETS[direction]
-        self.pos_y += d_row
-        self.pos_x += d_col
-        self.direction = direction
+        self.remember_cell()
+        self.move(self.maze, self.choose_direction(player))
 
     def next_cell(self, direction: int) -> Cell:
         """The cell we reach if we go in this direction."""
@@ -210,8 +221,7 @@ class Ghost:
         cell. We take the neighbour cell that is the closest to the target
         (or the farthest from the player when we are edible).
         """
-        options = [d for d in Maze.OFFSETS
-                   if self.maze.can_move(self.pos_y, self.pos_x, d)]
+        options = [d for d in Maze.OFFSETS if self.can_go(self.maze, d)]
         if not options:
             return 0
 

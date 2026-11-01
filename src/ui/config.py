@@ -1,7 +1,8 @@
 """Read config.json and give the game safe values.
 
 Rules:
-- Lines starting with '#' are comments and are ignored.
+- Lines starting with '#' are comments and are ignored
+  (C '/* */' and C++ '//' comments are accepted too).
 - A missing key        -> default value (silent).
 - A wrong value        -> warning + default value (the game goes on).
 - A broken file        -> warning + all default values (the game goes on).
@@ -16,6 +17,56 @@ MIN_MAZE_SIZE = 5
 MAX_MAZE_SIZE = 30
 # default maze sizes of the 10 levels (a bigger maze needs more time)
 DEFAULT_SIZES = (15, 15, 15, 17, 17, 17, 17, 19, 19, 19)
+
+
+def strip_comments(text: str) -> str:
+    """Remove the comments from a JSON text.
+
+    - Lines starting with '#' (spaces before are allowed).
+    - C++ comments: '//' until the end of the line.
+    - C comments: '/* ... */', on one or more lines.
+    Text inside "strings" is never touched.
+    """
+    out: list[str] = []
+    i = 0
+    in_string = False
+    at_line_start = True
+    while i < len(text):
+        ch = text[i]
+        if in_string:
+            out.append(ch)
+            if ch == "\\" and i + 1 < len(text):
+                out.append(text[i + 1])
+                i += 1
+            elif ch == '"':
+                in_string = False
+            i += 1
+            continue
+        if at_line_start and ch == "#":
+            end = text.find("\n", i)
+            i = len(text) if end == -1 else end
+            continue
+        if text.startswith("//", i):
+            end = text.find("\n", i)
+            i = len(text) if end == -1 else end
+            continue
+        if text.startswith("/*", i):
+            end = text.find("*/", i + 2)
+            if end == -1:
+                raise ValueError("comment '/*' is never closed")
+            # keep the new lines so JSON errors give the right line number
+            out.append("\n" * text.count("\n", i, end))
+            i = end + 2
+            continue
+        if ch == '"':
+            in_string = True
+        if ch == "\n":
+            at_line_start = True
+        elif not ch.isspace():
+            at_line_start = False
+        out.append(ch)
+        i += 1
+    return "".join(out)
 
 
 @dataclass
@@ -124,7 +175,7 @@ class GameConfig:
 
     highscore_filename: str = "highscores.json"
     lives: int = 3
-    pacgum: int = 42
+    pacgum: int = 1000
     points_per_pacgum: int = 10
     points_per_super_pacgum: int = 50
     points_per_ghost: int = 200
@@ -141,17 +192,8 @@ class GameConfig:
 
         try:
             with open(filepath, "r", encoding="utf-8") as f:
-                lines = f.readlines()
-            # Drop comment lines (a '#' after some spaces counts too).
-            clean = [
-                ln for ln in lines
-                if not (
-                    ln.strip().startswith("#") or
-                    ln.startswith("//") or
-                    ln.startswith("/*")
-                )
-            ]
-            data = json.loads("".join(clean))
+                text = f.read()
+            data = json.loads(strip_comments(text))
         except FileNotFoundError:
             logging.error("Config file '%s' not found. Using default "
                           "settings.", filepath)
@@ -188,8 +230,9 @@ class GameConfig:
             0, 100000)
         config.points_per_ghost = read.read_int(
             data, "points_per_ghost", config.points_per_ghost, 0, 100000)
+        # seed > 0 only: 0 or less would give a random first level
         config.seed = read.read_int(data, "seed", config.seed,
-                                    -2**31, 2**31 - 1)
+                                    1, 2**31 - 1)
         config.level_max_time = read.read_int(
             data, "level_max_time", config.level_max_time, 10, 3600)
         config.cheat_mode = read.read_bool(data, "cheat_mode",

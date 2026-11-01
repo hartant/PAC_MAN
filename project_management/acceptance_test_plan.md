@@ -1,6 +1,6 @@
 # Acceptance test plan
 
-"Auto" = covered by `make test` (30 tests). "Manual" = played by a human.
+"Auto" = covered by `make test` (14 tests). "Manual" = played by a human.
 
 | # | Feature (subject) | How it was tested | Result |
 |---|---|---|---|
@@ -42,3 +42,21 @@
 | 50x50 maze crashed the generator (recursion) | Test | Higher recursion limit + max size 40 + `MazeError` |
 | Super mode gave invincibility instead of edible ghosts | Review | Real edible state, blue ghosts that run away |
 | No levels, no timer, no victory | Review against the subject | Levels from the config, timer, victory screen |
+
+## Fixes before the defense (self-review against the evaluation scale)
+
+| Problem found | Fix |
+|---|---|
+| Only 42 dots, all in the top 3 rows ("most corridors" not met) | Dots spread at regular steps over the whole maze; `pacgum` default 1000 |
+| `"pacgum": -2` in the shipped config gave a warning at each start | Valid value in `config.json` |
+| A-Maze-ing package copied in the repo (re-installing the wheel had no effect) | Copy removed; `make install` installs the wheel; clean `MazeError` if missing |
+| Maze loader: no check, no retry (README said the opposite) | Result checked (size, values, all cells linked), 5 tries, recursion limit raised |
+| `seed` ≤ 0 made level 1 random | `seed` must be ≥ 1, else warning + default 42 |
+| Only `#` / `//` at column 0 were removed; `/* */` on many lines broke the file | Real comment stripper (`#` lines, `//`, `/* */`), strings kept |
+| Highscores written in place (README said temp file + rename) | Temp file + `os.replace` |
+| Packaged game quit at once when double-clicked (no argument) | Frozen build uses the `config.json` next to it |
+| No `pac-man.spec`, `make clean` deleted it | `pac-man.spec` at the root, used by `make package` |
+| No `.gitignore`, `__pycache__` and `highscores.json` committed | `.gitignore` added, files removed from Git |
+| `make test` failed: `src/tests` missing | 14 tests added |
+| Walls rule written twice (Player and Ghost) | `Character` base class, inherited by both |
+| Menu said "Push SPACE to play" (SPACE selects any item) | Text fixed |
