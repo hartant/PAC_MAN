@@ -1,25 +1,24 @@
-PYTHON  = python3
-PIP     = $(PYTHON) -m pip
 
-MAZE_WHL = $(wildcard mazegenerator-*.whl)
+
+UV := $(shell command -v uv 2>/dev/null || echo "python3 -m uv")
 
 install:
-	$(PIP) install pygame flake8 mypy pytest pyinstaller
-	$(PIP) install --force-reinstall $(MAZE_WHL)
+	@command -v uv >/dev/null 2>&1 || python3 -m pip install --user uv
+	$(UV) sync
 
 run:
-	$(PYTHON) pac-man.py config.json
+	$(UV) run python pac-man.py config.json
 
 debug:
-	$(PYTHON) -m pdb pac-man.py config.json
+	$(UV) run python -m pdb pac-man.py config.json
 
 clean:
 	find . -type d -name "__pycache__" -prune -exec rm -rf {} +
 	rm -rf .mypy_cache .pytest_cache build dist
 
 lint:
-	flake8 . --exclude .venv,venv,build,dist
-	mypy . --warn-return-any --warn-unused-ignores --ignore-missing-imports \
+	$(UV) run flake8 . --exclude .venv,venv,build,dist
+	$(UV) run mypy . --warn-return-any --warn-unused-ignores --ignore-missing-imports \
 		--disallow-untyped-defs --check-untyped-defs --exclude '(build|dist|venv|\.venv)/'
 
 .PHONY: install run debug clean lint

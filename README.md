@@ -33,19 +33,26 @@ Features:
 
 ### Install
 
-The assigned A-Maze-ing package is the wheel file `mazegenerator-*.whl` at
-the root of the repository. `make install` installs it with pip (as it is,
-never modified), together with the other dependencies:
+Dependencies are managed with **[uv](https://docs.astral.sh/uv/)**:
+`pyproject.toml` lists them and `uv.lock` pins their exact versions, so every
+machine installs the same ones. The assigned A-Maze-ing package is the wheel
+`mazegenerator-*.whl` at the root of the repository; it is a dependency of
+the project (`[tool.uv.sources]`), installed as it is, never modified.
 
 ```bash
-make install        # pygame flake8 mypy pytest pyinstaller + the maze wheel
+make install        # = uv sync  (creates .venv: pygame, the maze wheel,
+                    #   flake8, mypy, pytest, pyinstaller)
 ```
+
+If uv is missing, `make install` installs it first (`pip install --user uv`).
+To re-install the maze package from its wheel:
+`uv sync --reinstall-package mazegenerator`.
 
 ### Run
 
 ```bash
-make run            # = python3 pac-man.py config.json
-python3 pac-man.py my_config.json      # any JSON file with the same format
+make run                                   # = uv run python pac-man.py config.json
+uv run python pac-man.py my_config.json    # any JSON file with the same format
 ```
 
 The program takes **exactly one argument**: the configuration file (the
@@ -53,18 +60,15 @@ packaged game started with a double click uses the `config.json` next to it). A 
 file, a wrong value or a missing key never gives a traceback: a clear message
 is printed and safe defaults are used.
 
-### Other rules of the Makefile
+### Rules of the Makefile
 
 | Rule | What it does |
 |---|---|
-| `make install` | Install the dependencies |
+| `make install` | Install the dependencies with uv (`uv sync`) |
 | `make run` | Start the game with `config.json` |
 | `make debug` | Start the game with `pdb` |
 | `make clean` | Remove `__pycache__`, `.mypy_cache`, `.pytest_cache`, `build`, `dist` |
 | `make lint` | `flake8 .` and `mypy .` with the flags of the subject |
-| `make lint-strict` | `flake8 .` and `mypy . --strict` |
-| `make test` | Run all the tests (`pytest src/tests`) |
-| `make package` | Build the standalone game from `pac-man.spec` (`dist/pac-man/`) |
 
 ### Controls
 
@@ -151,7 +155,7 @@ dependency, and it is enough for 10 lines.
 
 The maze comes from the assigned **A-Maze-ing** package: the wheel
 `mazegenerator-*.whl` given at the start of the project, installed with
-`make install` and used as it is (never modified, never copied in our code).
+`make install` (uv) and used as it is (never modified, never copied in our code).
 Our loader adapts to its interface:
 `src/logic/maze.py → Maze.generate(width, height, seed)` loads the
 `MazeGenerator` class of the package (`Maze.load_generator`) and calls
@@ -204,7 +208,7 @@ MazeGenerator(size=(width, height), perfect=False, seed=seed).maze
 
 ### Tests
 
-`make test` (or `pytest src/tests`) runs 14 tests: config reader and
+`python3 -m pytest src/tests` runs 14 tests: config reader and
 comments, faulty values, maze generation and walls, dots spread, super
 pacgum, highscores (top 10, names, broken file).
 
@@ -253,14 +257,26 @@ in [`project_management/`](project_management/README.md).
 
 ## Packaging
 
-`make package` runs PyInstaller with `pac-man.spec` (the packaging script,
-at the root of the repository): it builds the folder `dist/pac-man/` with the
-game inside (no Python needed), and copies `config.json` and `README.md` in
-it. Double-click `pac-man` to play: without an argument the packaged game
-reads the `config.json` next to it and saves `highscores.json` there. This
-folder, zipped, is the free (unlisted) build uploaded on Itch.io:
+The packaging script is `pac-man.spec`, at the root of the repository.
+PyInstaller (installed by uv) turns the game into a folder that runs
+without Python. Build it from zero, at the root of the repository:
 
-**Itch.io page:** <PUT THE ITCH.IO LINK HERE>
+```bash
+make install                                   # uv sync
+rm -rf build dist                              # start from zero
+uv run pyinstaller --noconfirm pac-man.spec    # -> dist/pac-man/
+cp config.json README.md dist/pac-man/         # settings + instructions
+cd dist && zip -r pac-man-linux.zip pac-man && cd ..
+```
+
+`dist/pac-man/` contains the program `pac-man`, its `_internal/` folder,
+`config.json` and `README.md` (the in-package instructions). Double-click
+`pac-man` to play: without an argument the packaged game reads the
+`config.json` next to it and saves `highscores.json` there. A build only
+runs on the system it was made on (build on Linux for Linux, on Windows for
+Windows). The zip is the free (unlisted) build uploaded on Itch.io:
+
+**Itch.io page:** <https://dexter-x.itch.io/pacman>
 
 ## Resources
 
@@ -271,6 +287,7 @@ folder, zipped, is the free (unlisted) build uploaded on Itch.io:
   https://pacman.holenet.info/
 - Breadth-first search (used for the ghosts): any algorithms course.
 - PyInstaller documentation: https://pyinstaller.org/
+- uv documentation: https://docs.astral.sh/uv/
 - Itch.io creator documentation: https://itch.io/docs/creators/
 
 ### How AI was used

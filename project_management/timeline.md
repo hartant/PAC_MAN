@@ -16,7 +16,7 @@ Team of 2. Dates come from `git log` (branches `main`, `Dexter`, `hartant`).
 | Config parser hardening (types, ranges, levels) | Day 5–6 | 28–29 Oct | Done |
 | Tests, flake8 / mypy clean, Makefile, `.gitignore` | Day 6 | 29 Oct | Done |
 | README, project management documents | Day 6–7 | 29 Oct | Done |
-| Package and upload on Itch.io | Day 7 | `make package` ready, upload to do by the team | To do |
+| Package and upload on Itch.io | Day 7 | `pac-man.spec` ready, upload to do by the team | To do |
 | Peer review preparation (recode exercise, cheat mode demo) | Day 7 | — | To do |
 
 ## Progress tracking

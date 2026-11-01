@@ -21,7 +21,7 @@ PLAYER_COLOR: Color = (255, 255, 0)
 EDIBLE_COLOR: Color = (40, 40, 255)
 FLASH_COLOR: Color = (240, 240, 240)
 
-# direction -> angle on the screen (degrees) where Pac-Man looks
+
 ANGLES: Dict[int, int] = {
     Maze.RIGHT: 0, Maze.TOP: 90, Maze.LEFT: 180, Maze.BUTTOM: 270,
 }

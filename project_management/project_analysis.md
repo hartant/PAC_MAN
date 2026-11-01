@@ -14,7 +14,7 @@
 | Cheat mode | `GameEngine.handle_cheat_key` |
 | Menu, HUD, pause, game over, victory | `src/ui/` |
 | Makefile, flake8, mypy, type hints, docstrings | whole project |
-| Packaging, README, project management | `Makefile` (`make package`), `README.md`, this folder |
+| Packaging, README, project management | `pac-man.spec` (PyInstaller), `README.md`, this folder |
 
 ## Main technical choices
 

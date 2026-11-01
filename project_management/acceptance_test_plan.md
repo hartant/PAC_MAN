@@ -1,6 +1,6 @@
 # Acceptance test plan
 
-"Auto" = covered by `make test` (14 tests). "Manual" = played by a human.
+"Auto" = covered by `python3 -m pytest src/tests` (14 tests). "Manual" = played by a human.
 
 | # | Feature (subject) | How it was tested | Result |
 |---|---|---|---|
@@ -25,8 +25,8 @@
 | 19 | HUD: score, lives, level, time | Auto + manual | OK |
 | 20 | Resize the window | Manual | OK |
 | 21 | Cheat mode (invincible, skip level, freeze, extra life) | Auto: `test_cheat_keys` + manual | OK |
-| 22 | flake8 and mypy (subject flags and `--strict`) | `make lint`, `make lint-strict` | OK |
-| 23 | Package starts on a clean folder | `make package` + run of the binary | OK on Linux; to repeat on the machine of the defense |
+| 22 | flake8 and mypy (subject flags) | `make lint` | OK |
+| 23 | Package starts on a clean folder | `pyinstaller --noconfirm pac-man.spec` + run of the binary | OK on Linux; to repeat on the machine of the defense |
 
 ## Bugs found and fixed (history)
 
@@ -55,8 +55,8 @@
 | Only `#` / `//` at column 0 were removed; `/* */` on many lines broke the file | Real comment stripper (`#` lines, `//`, `/* */`), strings kept |
 | Highscores written in place (README said temp file + rename) | Temp file + `os.replace` |
 | Packaged game quit at once when double-clicked (no argument) | Frozen build uses the `config.json` next to it |
-| No `pac-man.spec`, `make clean` deleted it | `pac-man.spec` at the root, used by `make package` |
+| No `pac-man.spec`, `make clean` deleted it | `pac-man.spec` at the root (`pyinstaller pac-man.spec`) |
 | No `.gitignore`, `__pycache__` and `highscores.json` committed | `.gitignore` added, files removed from Git |
-| `make test` failed: `src/tests` missing | 14 tests added |
+| `src/tests` missing (README spoke of tests) | 14 tests added |
 | Walls rule written twice (Player and Ghost) | `Character` base class, inherited by both |
 | Menu said "Push SPACE to play" (SPACE selects any item) | Text fixed |

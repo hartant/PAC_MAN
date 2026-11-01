@@ -7,12 +7,12 @@ import os
 import sys
 
 import pygame as pg
-
 from src.logic.core import GameEngine
 from src.logic.highscore import ScoringSystem
 from src.logic.maze import MazeError
 from src.ui.config import GameConfig
 from src.ui.menu import MenuScreen
+
 
 WINDOW_SIZE = (1200, 900)
 

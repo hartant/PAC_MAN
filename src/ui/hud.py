@@ -9,8 +9,7 @@ WHITE = (255, 255, 255)
 RED = (255, 60, 60)
 BLUE = (90, 160, 255)
 ORANGE = (255, 170, 40)
-
-MAX_ICONS = 5           # more lives than this are shown as "x 7"
+MAX_ICONS = 5
 
 
 class Hud:

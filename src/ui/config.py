@@ -15,7 +15,7 @@ from typing import Any
 
 MIN_MAZE_SIZE = 5
 MAX_MAZE_SIZE = 30
-# default maze sizes of the 10 levels (a bigger maze needs more time)
+
 DEFAULT_SIZES = (15, 15, 15, 17, 17, 17, 17, 19, 19, 19)
 
 
